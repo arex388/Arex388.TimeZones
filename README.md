@@ -9,7 +9,7 @@ There are four methods available:
 - `GetTimeZones` - Returns a list of all time zones like the one below.
 - `GetTimeZoneByCoordinate` - Returns a time zone for a specific location coordinate.
 - `GetTimeZoneByIanaId` - Returns a time zone for a specific IANA id.
-- `GetTimeZoneByWindowsId` - Returns a time zone for a specific Windows id.
+- `GetTimeZonesByWindowsId` - Returns a list of time zones for a specific Windows id.
 
 #### Why?
 
