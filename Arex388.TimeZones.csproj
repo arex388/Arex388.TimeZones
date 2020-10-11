@@ -6,14 +6,14 @@
     <PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
     <RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
     <PackageTags>arex388 timezone</PackageTags>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GeoTimeZone" Version="4.0.0" />
-    <PackageReference Include="NodaTime" Version="3.0.0" />
-    <PackageReference Include="TimeZoneConverter" Version="3.2.0" />
-    <PackageReference Include="TimeZoneNames" Version="4.0.1" />
+    <PackageReference Include="GeoTimeZone" Version="4.1.0" />
+    <PackageReference Include="NodaTime" Version="3.0.1" />
+    <PackageReference Include="TimeZoneConverter" Version="3.3.0" />
+    <PackageReference Include="TimeZoneNames" Version="4.1.0" />
   </ItemGroup>
 
 </Project>
