@@ -1,15 +1,19 @@
 ﻿# Arex388.TimeZones
 
-A small utility library to help with time zone discovery. It combines the [GeoTimeZone][0], [TimeZoneConverter][1], [TimeZoneNames][3], and [NodaTime][3] NuGet packages to make it all work.
+A small utility library to help with time zone discovery. It combines the [GeoTimeZone](https://github.com/mj1856/GeoTimeZone), [TimeZoneConverter](https://github.com/mj1856/TimeZoneConverter), [TimeZoneNames](https://github.com/mj1856/TimeZoneNames), and [NodaTime](https://github.com/nodatime/nodatime) NuGet packages to make it all work.
 
 #### How to Use
 
 There are four methods available:
 
 - `GetTimeZones` - Returns a list of all time zones like the one below.
-- `GetTimeZoneByCoordinate` - Returns a time zone for a specific location coordinate.
+- `GetTimeZoneByCoordinate` - Returns the current time zone at the current point in time for a specific location coordinate.
 - `GetTimeZoneByIanaId` - Returns a time zone for a specific IANA id.
 - `GetTimeZonesByWindowsId` - Returns a list of time zones for a specific Windows id.
+
+#### Extensions
+
+As of v1.0.10, I've added two extension methods on `DateTime` and `DateTimeOffset` to shift an instance of either to a different time zone without changing the time. For example you're in Los Angeles, California but are setting a date time value for a user in Miami, Florida. If you're presented with a `datetime-local` picker in the browser, the server will interpret the value in its local time zone, but it's really for the other user's time zone. The `AtTimeZone` extension method shifts the time zone without changing the value.
 
 #### Why?
 
@@ -17,7 +21,7 @@ I really needed to be able to get the time zone for a specific location coordina
 
 #### Time Zones
 
-Here's an example of the full list of time zones returned by the `GetTimeZones` method. The offset varies depending on when you actually pull the list. I personally have a scheduled job using [Hangfire][4] to run once a day and pull the list, then update my database with the "latest" offset.
+Here's an example of the full list of time zones returned by the `GetTimeZones` method. The offset varies depending on when you actually pull the list. I personally have a scheduled job using [Hangfire](https://github.com/HangfireIO/Hangfire) to run once a day and pull the list, then update my database with the "latest" offset.
 
 | Abbreviation | IANA Id | Daylight Savings | Offset | Windows Id |
 |--------------|---------|------------------|--------|------------|
@@ -614,9 +618,3 @@ Here's an example of the full list of time zones returned by the `GetTimeZones` 
 |Moscow Standard Time|W-SU|False|+03:00|Russian Standard Time|
 |WET|WET|False|+00:00|GMT Standard Time|
 |UTC Standard Time|Zulu|False|+00:00|UTC|
-
-[0]:https://github.com/mj1856/GeoTimeZone
-[1]:https://github.com/mj1856/TimeZoneConverter
-[2]:https://github.com/mj1856/TimeZoneNames
-[3]:https://github.com/nodatime/nodatime
-[4]:https://github.com/HangfireIO/Hangfire

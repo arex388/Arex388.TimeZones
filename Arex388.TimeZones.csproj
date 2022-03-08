@@ -1,19 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Description>Time zone utilities.</Description>
-    <PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
-    <PackageTags>arex388 timezone</PackageTags>
-    <Version>1.0.2</Version>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Description>Time zone utilities.</Description>
+		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
+		<PackageTags>arex388 timezone</PackageTags>
+		<Version>1.0.10</Version>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="GeoTimeZone" Version="4.1.0" />
-    <PackageReference Include="NodaTime" Version="3.0.1" />
-    <PackageReference Include="TimeZoneConverter" Version="3.3.0" />
-    <PackageReference Include="TimeZoneNames" Version="4.1.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="GeoTimeZone" Version="4.1.0" />
+		<PackageReference Include="NodaTime" Version="3.0.9" />
+		<PackageReference Include="TimeZoneConverter" Version="5.0.0" />
+		<PackageReference Include="TimeZoneNames" Version="5.0.1" />
+	</ItemGroup>
 
 </Project>

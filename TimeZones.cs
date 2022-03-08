@@ -7,24 +7,22 @@ using TimeZoneConverter;
 using TimeZoneNames;
 
 namespace Arex388.TimeZones {
-	public static class TimeZones {
-		private static readonly IEnumerable<TimeZone> TimeZonesCollection = GetTimeZonesCollection();
-
+    public static class TimeZones {
 		private static IEnumerable<TimeZone> GetTimeZonesCollection() {
 			var clock = SystemClock.Instance.GetCurrentInstant();
 
 			return DateTimeZoneProviders.Tzdb.Ids.Select(
-				id => DateTimeZoneProviders.Tzdb[id]).Select(
-				tz => {
-					var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(tz.Id, out var windowsTimeZoneId);
+				_ => DateTimeZoneProviders.Tzdb[_]).Select(
+				_ => {
+					var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(_.Id, out var windowsTimeZoneId);
 					var isDaylightSavings = gotWindowsTimeZoneId
 											&& TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(DateTime.Now);
-					var abbreviations = TZNames.GetAbbreviationsForTimeZone(tz.Id, "en");
+					var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, "en");
 					var abbreviation = isDaylightSavings ? abbreviations.Daylight : abbreviations.Standard;
-					var offset = tz.GetUtcOffset(clock);
+					var offset = _.GetUtcOffset(clock);
 
 					return new TimeZone {
-						IanaId = tz.Id,
+						IanaId = _.Id,
 						WindowsId = windowsTimeZoneId,
 						UtcOffset = offset.ToFormattedString(),
 						Abbreviation = abbreviation,
@@ -33,7 +31,7 @@ namespace Arex388.TimeZones {
 				});
 		}
 
-		public static IEnumerable<TimeZone> GetTimeZones() => TimeZonesCollection;
+		public static IEnumerable<TimeZone> GetTimeZones() => GetTimeZonesCollection();
 
 		public static TimeZone GetTimeZoneByCoordinate(
 			decimal latitude,
@@ -53,11 +51,11 @@ namespace Arex388.TimeZones {
 		}
 
 		public static TimeZone GetTimeZoneByIanaId(
-			string ianaId) => TimeZonesCollection.SingleOrDefault(
-			tz => tz.IanaId == ianaId);
+			string ianaId) => GetTimeZonesCollection().SingleOrDefault(
+			_ => _.IanaId == ianaId);
 
 		public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-			string windowsId) => TimeZonesCollection.Where(
-			tz => tz.WindowsId == windowsId);
+			string windowsId) => GetTimeZonesCollection().Where(
+			_ => _.WindowsId == windowsId);
 	}
 }
