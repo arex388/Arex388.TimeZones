@@ -6,8 +6,8 @@
 		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
 		<PackageTags>arex388 timezone</PackageTags>
-		<Version>1.0.12</Version>
-		<LangVersion>8.0</LangVersion>
+		<Version>1.0.13</Version>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

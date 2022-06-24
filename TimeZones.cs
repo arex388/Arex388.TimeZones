@@ -6,56 +6,56 @@ using System.Linq;
 using TimeZoneConverter;
 using TimeZoneNames;
 
-namespace Arex388.TimeZones {
-    public static class TimeZones {
-		private static IEnumerable<TimeZone> GetTimeZonesCollection() {
-			var clock = SystemClock.Instance.GetCurrentInstant();
+namespace Arex388.TimeZones;
 
-			return DateTimeZoneProviders.Tzdb.Ids.Select(
-				_ => DateTimeZoneProviders.Tzdb[_]).Select(
-				_ => {
-					var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(_.Id, out var windowsTimeZoneId);
-					var isDaylightSavings = gotWindowsTimeZoneId
-											&& TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(DateTime.Now);
-					var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, "en");
-					var abbreviation = isDaylightSavings ? abbreviations.Daylight : abbreviations.Standard;
-					var offset = _.GetUtcOffset(clock);
+public static class TimeZones {
+    private static IEnumerable<TimeZone> GetTimeZonesCollection() {
+        var clock = SystemClock.Instance.GetCurrentInstant();
 
-					return new TimeZone {
-						IanaId = _.Id,
-						WindowsId = windowsTimeZoneId,
-						UtcOffset = offset.ToFormattedString(),
-						Abbreviation = abbreviation,
-						IsDaylightSavings = isDaylightSavings
-					};
-				});
-		}
+        return DateTimeZoneProviders.Tzdb.Ids.Select(
+            _ => DateTimeZoneProviders.Tzdb[_]).Select(
+            _ => {
+                var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(_.Id, out var windowsTimeZoneId);
+                var isDaylightSavings = gotWindowsTimeZoneId
+                                        && TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(DateTime.Now);
+                var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, "en");
+                var abbreviation = isDaylightSavings ? abbreviations.Daylight : abbreviations.Standard;
+                var offset = _.GetUtcOffset(clock);
 
-		public static IEnumerable<TimeZone> GetTimeZones() => GetTimeZonesCollection();
+                return new TimeZone {
+                    IanaId = _.Id,
+                    WindowsId = windowsTimeZoneId,
+                    UtcOffset = offset.ToFormattedString(),
+                    Abbreviation = abbreviation,
+                    IsDaylightSavings = isDaylightSavings
+                };
+            });
+    }
 
-		public static TimeZone GetTimeZoneByCoordinate(
-			decimal latitude,
-			decimal longitude) {
-			var lat = Convert.ToDouble(latitude);
-			var lng = Convert.ToDouble(longitude);
+    public static IEnumerable<TimeZone> GetTimeZones() => GetTimeZonesCollection();
 
-			return GetTimeZoneByCoordinate(lat, lng);
-		}
+    public static TimeZone GetTimeZoneByCoordinate(
+        decimal latitude,
+        decimal longitude) {
+        var lat = Convert.ToDouble(latitude);
+        var lng = Convert.ToDouble(longitude);
 
-		public static TimeZone GetTimeZoneByCoordinate(
-			double latitude,
-			double longitude) {
-			var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
+        return GetTimeZoneByCoordinate(lat, lng);
+    }
 
-			return GetTimeZoneByIanaId(ianaId.Result);
-		}
+    public static TimeZone GetTimeZoneByCoordinate(
+        double latitude,
+        double longitude) {
+        var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
 
-		public static TimeZone GetTimeZoneByIanaId(
-			string ianaId) => GetTimeZonesCollection().SingleOrDefault(
-			_ => _.IanaId == ianaId);
+        return GetTimeZoneByIanaId(ianaId.Result);
+    }
 
-		public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-			string windowsId) => GetTimeZonesCollection().Where(
-			_ => _.WindowsId == windowsId);
-	}
+    public static TimeZone GetTimeZoneByIanaId(
+        string ianaId) => GetTimeZonesCollection().SingleOrDefault(
+        _ => _.IanaId == ianaId);
+
+    public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
+        string windowsId) => GetTimeZonesCollection().Where(
+        _ => _.WindowsId == windowsId);
 }

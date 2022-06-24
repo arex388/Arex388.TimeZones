@@ -1,17 +1,11 @@
-﻿namespace System {
-    public static class DateTimeExtensions {
-        public static DateTime? AtTimeZone(
-            this DateTime? value,
-            Arex388.TimeZones.TimeZone timeZone) {
-            if (!value.HasValue) {
-                return null;
-            }
+﻿namespace System;
 
-            return value.Value.AtTimeZone(timeZone);
-        }
+public static class DateTimeExtensions {
+    public static DateTime? AtTimeZone(
+        this DateTime? value,
+        Arex388.TimeZones.TimeZone timeZone) => value?.AtTimeZone(timeZone);
 
-        public static DateTime AtTimeZone(
-            this DateTime value,
-            Arex388.TimeZones.TimeZone timeZone) => new DateTimeOffset(value).AtTimeZone(timeZone).DateTime;
-    }
+    public static DateTime AtTimeZone(
+        this DateTime value,
+        Arex388.TimeZones.TimeZone timeZone) => new DateTimeOffset(value).AtTimeZone(timeZone).DateTime;
 }
