@@ -9,7 +9,8 @@ using TimeZoneNames;
 namespace Arex388.TimeZones;
 
 public static class TimeZones {
-    private static IEnumerable<TimeZone> GetTimeZonesCollection() {
+    private static IEnumerable<TimeZone> GetTimeZonesCollection(
+        string languateCode) {
         var clock = SystemClock.Instance.GetCurrentInstant();
 
         return DateTimeZoneProviders.Tzdb.Ids.Select(
@@ -18,21 +19,24 @@ public static class TimeZones {
                 var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(_.Id, out var windowsTimeZoneId);
                 var isDaylightSavings = gotWindowsTimeZoneId
                                         && TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(DateTime.Now);
-                var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, "en");
-                var abbreviation = isDaylightSavings ? abbreviations.Daylight : abbreviations.Standard;
+                var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, languateCode);
+                var abbreviation = isDaylightSavings ?
+                    abbreviations.Daylight :
+                    abbreviations.Standard;
                 var offset = _.GetUtcOffset(clock);
 
                 return new TimeZone {
-                    IanaId = _.Id,
-                    WindowsId = windowsTimeZoneId,
-                    UtcOffset = offset.ToFormattedString(),
                     Abbreviation = abbreviation,
-                    IsDaylightSavings = isDaylightSavings
+                    IanaId = _.Id,
+                    IsDaylightSavings = isDaylightSavings,
+                    UtcOffset = offset.ToFormattedString(),
+                    WindowsId = windowsTimeZoneId
                 };
             });
     }
 
-    public static IEnumerable<TimeZone> GetTimeZones() => GetTimeZonesCollection();
+    public static IEnumerable<TimeZone> GetTimeZones(
+        string languageCode = "en-US") => GetTimeZonesCollection(languageCode);
 
     public static TimeZone GetTimeZoneByCoordinate(
         decimal latitude,
@@ -52,10 +56,12 @@ public static class TimeZones {
     }
 
     public static TimeZone GetTimeZoneByIanaId(
-        string ianaId) => GetTimeZonesCollection().SingleOrDefault(
+        string ianaId,
+        string languageCode = "en-US") => GetTimeZonesCollection(languageCode).SingleOrDefault(
         _ => _.IanaId == ianaId);
 
     public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-        string windowsId) => GetTimeZonesCollection().Where(
+        string windowsId,
+        string languageCode = "en-US") => GetTimeZonesCollection(languageCode).Where(
         _ => _.WindowsId == windowsId);
 }

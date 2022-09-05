@@ -7,17 +7,19 @@ A small utility library to help with time zone discovery. It combines the [GeoTi
 There are four methods available:
 
 - `GetTimeZones` - Returns a list of all time zones like the one below.
-- `GetTimeZoneByCoordinate` - Returns the current time zone at the current point in time for a specific location coordinate.
-- `GetTimeZoneByIanaId` - Returns a time zone for a specific IANA id.
-- `GetTimeZonesByWindowsId` - Returns a list of time zones for a specific Windows id.
+- `GetTimeZoneByCoordinate` - Returns the current time zone, *at the current point in time*, for a specific location coordinate.
+- `GetTimeZoneByIanaId` - Returns the current time zone, *at the current point in time*, for a specific IANA id.
+- `GetTimeZonesByWindowsId` - Returns the current list of time zones, *at the current point in time*, for a specific Windows id.
 
 #### Extensions
 
-As of v1.0.10, I've added two extension methods on `DateTime` and `DateTimeOffset` to shift an instance of either to a different time zone without changing the time. For example you're in Los Angeles, California but are setting a date time value for a user in Miami, Florida. If you're presented with a `datetime-local` picker in the browser, the server will interpret the value in its local time zone, but it's really for the other user's time zone. The `AtTimeZone` extension method shifts the time zone without changing the value.
+- `AtTimeZone()` - Shifts the time zone of a `DateTime` or `DateTimeOffset` without changing the value.
+
+As of v1.0.10, I've added two extension methods on `DateTime` and `DateTimeOffset` to shift to a different time zone without changing the time. For example you're in Los Angeles, California but are setting a date time value for a user in Miami, Florida. If you're presented with a `datetime-local` picker in the browser, the server will interpret the value in its local time zone, but it's really for the other user's time zone. The `AtTimeZone` extension method shifts the time zone without changing the value.
 
 #### Why?
 
-I really needed to be able to get the time zone for a specific location coordinate. I was going to use the Google Maps Time Zone API, but at $5.00 per 1000 requests, it was going to become extremely expensive and fast. After a bit of prototyping I pieced together the same functionality for free using the NuGet packages listed above.
+I really needed to be able to get the time zone for a specific location coordinate. I was going to use the Google Maps Time Zone API, but at $5.00 per 1000 requests, it was going to become extremely expensive very quickly. After a bit of prototyping I pieced together the same functionality for free using the NuGet packages listed above.
 
 #### Time Zones
 
