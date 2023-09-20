@@ -1,67 +1,181 @@
 ﻿using GeoTimeZone;
 using NodaTime;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using NodaTime.Extensions;
 using TimeZoneConverter;
 using TimeZoneNames;
 
 namespace Arex388.TimeZones;
 
+/// <summary>
+/// TimeZones object.
+/// </summary>
 public static class TimeZones {
-    private static IEnumerable<TimeZone> GetTimeZonesCollection(
-        string languateCode) {
-        var clock = SystemClock.Instance.GetCurrentInstant();
+	/// <summary>
+	/// Returns all time zones for the current instant in time.
+	/// </summary>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zones.</returns>
+	public static IEnumerable<TimeZone> GetTimeZones(
+		string languageCode = "en-US") {
+		var instant = SystemClock.Instance.GetCurrentInstant();
 
-        return DateTimeZoneProviders.Tzdb.Ids.Select(
-            _ => DateTimeZoneProviders.Tzdb[_]).Select(
-            _ => {
-                var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(_.Id, out var windowsTimeZoneId);
-                var isDaylightSavings = gotWindowsTimeZoneId
-                                        && TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(DateTime.Now);
-                var abbreviations = TZNames.GetAbbreviationsForTimeZone(_.Id, languateCode);
-                var abbreviation = isDaylightSavings ?
-                    abbreviations.Daylight :
-                    abbreviations.Standard;
-                var offset = _.GetUtcOffset(clock);
+		return GetTimeZones(instant, languageCode);
+	}
 
-                return new TimeZone {
-                    Abbreviation = abbreviation,
-                    IanaId = _.Id,
-                    IsDaylightSavings = isDaylightSavings,
-                    UtcOffset = offset.ToFormattedString(),
-                    WindowsId = windowsTimeZoneId
-                };
-            });
-    }
+	/// <summary>
+	/// Returns all time zones for an instant in time.
+	/// </summary>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zones.</returns>
+	public static IEnumerable<TimeZone> GetTimeZones(
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") {
+		if (dateTime is null) {
+			throw new ArgumentNullException(nameof(dateTime));
+		}
 
-    public static IEnumerable<TimeZone> GetTimeZones(
-        string languageCode = "en-US") => GetTimeZonesCollection(languageCode);
+		var instant = dateTime.Value.ToInstant();
 
-    public static TimeZone GetTimeZoneByCoordinate(
-        decimal latitude,
-        decimal longitude) {
-        var lat = Convert.ToDouble(latitude);
-        var lng = Convert.ToDouble(longitude);
+		return GetTimeZones(instant, languageCode);
+	}
 
-        return GetTimeZoneByCoordinate(lat, lng);
-    }
+	/// <summary>
+	/// Returns all time zones for an instant in time.
+	/// </summary>
+	/// <param name="instant">The instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zones.</returns>
+	public static IEnumerable<TimeZone> GetTimeZones(
+		Instant instant,
+		string languageCode = "en-US") => DateTimeZoneProviders.Tzdb.Ids.Select(
+		id => DateTimeZoneProviders.Tzdb[id]).Select(
+		dtz => {
+			var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(dtz.Id, out var windowsTimeZoneId);
 
-    public static TimeZone GetTimeZoneByCoordinate(
-        double latitude,
-        double longitude) {
-        var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
+			if (!gotWindowsTimeZoneId
+				|| windowsTimeZoneId is null) {
+				return null;
+			}
 
-        return GetTimeZoneByIanaId(ianaId.Result);
-    }
+			var isDaylightSavings = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(instant.ToDateTimeOffset());
+			var abbreviation = TZNames.GetAbbreviationsForTimeZone(dtz.Id, languageCode);
+			var offset = dtz.GetUtcOffset(instant);
 
-    public static TimeZone GetTimeZoneByIanaId(
-        string ianaId,
-        string languageCode = "en-US") => GetTimeZonesCollection(languageCode).SingleOrDefault(
-        _ => _.IanaId == ianaId);
+			return new TimeZone {
+				Abbreviation = (isDaylightSavings
+					? abbreviation.Daylight
+					: abbreviation.Standard) ?? dtz.Id,
+				IanaId = dtz.Id,
+				IsDaylightSavings = isDaylightSavings,
+				UtcOffset = offset.ToFormattedString(),
+				UtcOffsetTs = offset.ToTimeSpan(),
+				WindowsId = windowsTimeZoneId
+			};
+		}).Where(
+		tz => tz is not null);
 
-    public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-        string windowsId,
-        string languageCode = "en-US") => GetTimeZonesCollection(languageCode).Where(
-        _ => _.WindowsId == windowsId);
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
+	/// </summary>
+	/// <param name="latitude">The coordinate's latitude.</param>
+	/// <param name="longitude">The coordinate's longitude.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByCoordinate(
+		decimal latitude,
+		decimal longitude) => GetTimeZoneByCoordinate((double)latitude, (double)longitude);
+
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
+	/// </summary>
+	/// <param name="latitude">The coordinate's latitude.</param>
+	/// <param name="longitude">The coordinate's longitude.</param>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByCoordinate(
+		decimal latitude,
+		decimal longitude,
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") => GetTimeZoneByCoordinate((double)latitude, (double)longitude, dateTime, languageCode);
+
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
+	/// </summary>
+	/// <param name="latitude">The coordinate's latitude.</param>
+	/// <param name="longitude">The coordinate's longitude.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByCoordinate(
+		double latitude,
+		double longitude) {
+		var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
+
+		return GetTimeZoneByIanaId(ianaId.Result);
+	}
+
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for an instant in time.
+	/// </summary>
+	/// <param name="latitude">The coordinate's latitude.</param>
+	/// <param name="longitude">The coordinate's longitude.</param>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByCoordinate(
+		double latitude,
+		double longitude,
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") {
+		var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
+
+		return GetTimeZoneByIanaId(ianaId.Result, dateTime, languageCode);
+	}
+
+	/// <summary>
+	/// Returns the time zone by the IANA id for the current instant in time.
+	/// </summary>
+	/// <param name="ianaId">The time zone's IANA id.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByIanaId(
+		string ianaId,
+		string languageCode = "en-US") => GetTimeZones(languageCode).First(
+		tz => tz?.IanaId == ianaId);
+
+	/// <summary>
+	/// Returns the time zone by the IANA id for an instant in time.
+	/// </summary>
+	/// <param name="ianaId">The time zone's IANA id.</param>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone GetTimeZoneByIanaId(
+		string ianaId,
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).First(
+		tz => tz?.IanaId == ianaId);
+
+	/// <summary>
+	/// Returns the time zones by the Windows id for the current instant in time.
+	/// </summary>
+	/// <param name="windowsId">The time zones' Windows id.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zones.</returns>
+	public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		string languageCode = "en-US") => GetTimeZones(languageCode).Where(
+		tz => tz?.WindowsId == windowsId);
+
+	/// <summary>
+	/// Returns the time zones by the Windows id for the current instant in time.
+	/// </summary>
+	/// <param name="windowsId">The time zones' Windows id.</param>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zones.</returns>
+	public static IEnumerable<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).Where(
+		tz => tz?.WindowsId == windowsId);
 }

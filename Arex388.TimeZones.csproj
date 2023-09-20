@@ -1,18 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
-		<Description>Time zone utilities.</Description>
-		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
-		<PackageTags>arex388 timezone</PackageTags>
-		<Version>1.0.23</Version>
+		<Authors>Arex388</Authors>
+		<Description>Arex388.TimeZones is a small .NET Standard 2.0 library for time zone discovery in the past, present or future by a geospatial coordinate, IANA id, or Windows id.</Description>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
+		<PackageTags>arex388 timezone</PackageTags>
+		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Version>2.0.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GeoTimeZone" Version="5.2.0" />
+		<PackageReference Include="GeoTimeZone" Version="5.3.0" />
 		<PackageReference Include="NodaTime" Version="3.1.9" />
+		<PackageReference Include="PolySharp" Version="1.13.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="TimeZoneConverter" Version="6.1.0" />
 		<PackageReference Include="TimeZoneNames" Version="6.0.0" />
 	</ItemGroup>

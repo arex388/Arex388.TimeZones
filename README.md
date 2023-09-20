@@ -1,29 +1,25 @@
 ﻿# Arex388.TimeZones
 
-A small utility library to help with time zone discovery. It combines the [GeoTimeZone](https://github.com/mj1856/GeoTimeZone), [TimeZoneConverter](https://github.com/mj1856/TimeZoneConverter), [TimeZoneNames](https://github.com/mj1856/TimeZoneNames), and [NodaTime](https://github.com/nodatime/nodatime) NuGet packages to make it all work.
+Arex388.TimeZones is a small .NET Standard 2.0 library for time zone discovery in the past, present or future by a geospatial coordinate, IANA id, or Windows id. It combines the [GeoTimeZone](https://github.com/mj1856/GeoTimeZone), [TimeZoneConverter](https://github.com/mj1856/TimeZoneConverter), [TimeZoneNames](https://github.com/mj1856/TimeZoneNames), and [NodaTime](https://github.com/nodatime/nodatime) NuGet packages to make it all work.
+
+The library was created because I needed the ability to get the time zone of geospatial coordinates. The Google Maps Time Zone API provides this information, but it can become expensive very fast at $5.00 per 1000 requests. This library provides the same information for *free*.
 
 #### How to Use
 
 There are four methods available:
 
 - `GetTimeZones` - Returns a list of all time zones like the one below.
-- `GetTimeZoneByCoordinate` - Returns the current time zone, *at the current point in time*, for a specific location coordinate.
-- `GetTimeZoneByIanaId` - Returns the current time zone, *at the current point in time*, for a specific IANA id.
-- `GetTimeZonesByWindowsId` - Returns the current list of time zones, *at the current point in time*, for a specific Windows id.
+- `GetTimeZoneByCoordinate` - Returns the time zone for the current or a specific point in time, for a geospatial coordinate.
+- `GetTimeZoneByIanaId` - Returns the time zone for the current or a specific point in time for an IANA id.
+- `GetTimeZonesByWindowsId` - Returns a list of time zones for the current or a specific point in time for a Windows id.
 
 #### Extensions
 
-- `AtTimeZone()` - Shifts the time zone of a `DateTime` or `DateTimeOffset` without changing the value.
-
-As of v1.0.10, I've added two extension methods on `DateTime` and `DateTimeOffset` to shift to a different time zone without changing the time. For example you're in Los Angeles, California but are setting a date time value for a user in Miami, Florida. If you're presented with a `datetime-local` picker in the browser, the server will interpret the value in its local time zone, but it's really for the other user's time zone. The `AtTimeZone` extension method shifts the time zone without changing the value.
-
-#### Why?
-
-I really needed to be able to get the time zone for a specific location coordinate. I was going to use the Google Maps Time Zone API, but at $5.00 per 1000 requests, it was going to become extremely expensive very quickly. After a bit of prototyping I pieced together the same functionality for free using the NuGet packages listed above.
+- `DateTimeOffset.AtTimeZone()` - Returns the date and time value with the time zone changed without shifting the value.
 
 #### Time Zones
 
-Here's an example of the full list of time zones returned by the `GetTimeZones` method. The offset varies depending on when you actually pull the list. I personally have a scheduled job using [Hangfire](https://github.com/HangfireIO/Hangfire) to run once a day and pull the list, then update my database with the "latest" offset.
+Here's an example of the full list of time zones returned by the `GetTimeZones` method. The offset varies depending on when you actually pull the list. I personally have a scheduled job using [Hangfire](https://github.com/HangfireIO/Hangfire) to run once a day and pull the list, then update my database with the current offset at that point in time.
 
 | Abbreviation | IANA Id | Daylight Savings | Offset | Windows Id |
 |--------------|---------|------------------|--------|------------|
