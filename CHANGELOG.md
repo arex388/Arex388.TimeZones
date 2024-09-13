@@ -1,4 +1,21 @@
-﻿#### 2.0.0
+﻿#### 2.0.4
+
+- **Updated:** NuGet packages.
+
+#### 2.0.3
+
+- **Added:** New `TimeZones.GetTimeZoneByCoordinate()` methods accepting an instance of `ICoordinate`.
+- **Added:** `ICoordinate` interface and `Coordinate` implementation.
+
+#### 2.0.2
+
+- **Updated:** NuGet packages.
+
+#### 2.0.1
+
+- **Changed:** Single time zones returned by a coordinate or IANA id lookup may not exist, so the return is explicitly a nullable `TimeZone` and the selection LINQ has been changed to `FirstOrDefault`.
+
+#### 2.0.0
 
 - **Added:** New `DateTimeOffsetExtensions.AtTimeZone()` methods accepting a `TimeSpan` UTC offset.
 - **Added:** XML docs.

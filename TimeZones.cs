@@ -81,9 +81,36 @@ public static class TimeZones {
 	/// <param name="latitude">The coordinate's latitude.</param>
 	/// <param name="longitude">The coordinate's longitude.</param>
 	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByCoordinate(
+	public static TimeZone? GetTimeZoneByCoordinate(
 		decimal latitude,
 		decimal longitude) => GetTimeZoneByCoordinate((double)latitude, (double)longitude);
+
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
+	/// </summary>
+	/// <param name="latitude">The coordinate's latitude.</param>
+	/// <param name="longitude">The coordinate's longitude.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone? GetTimeZoneByCoordinate(
+		double latitude,
+		double longitude) => GetTimeZoneByCoordinate(new Coordinate {
+			Latitude = latitude,
+			Longitude = longitude
+		});
+
+	/// <summary>
+	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
+	/// </summary>
+	/// <param name="coordinate">The coordinate.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone? GetTimeZoneByCoordinate(
+		ICoordinate coordinate,
+		string languageCode = "en-US") {
+		var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
+
+		return GetTimeZoneByIanaId(ianaId.Result, languageCode);
+	}
 
 	/// <summary>
 	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
@@ -93,25 +120,11 @@ public static class TimeZones {
 	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
 	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
 	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByCoordinate(
+	public static TimeZone? GetTimeZoneByCoordinate(
 		decimal latitude,
 		decimal longitude,
 		DateTimeOffset? dateTime,
 		string languageCode = "en-US") => GetTimeZoneByCoordinate((double)latitude, (double)longitude, dateTime, languageCode);
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
-	/// </summary>
-	/// <param name="latitude">The coordinate's latitude.</param>
-	/// <param name="longitude">The coordinate's longitude.</param>
-	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByCoordinate(
-		double latitude,
-		double longitude) {
-		var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
-
-		return GetTimeZoneByIanaId(ianaId.Result);
-	}
 
 	/// <summary>
 	/// Returns the time zone by the specified latitude and longitude coordinate for an instant in time.
@@ -121,12 +134,29 @@ public static class TimeZones {
 	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
 	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
 	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByCoordinate(
+	public static TimeZone? GetTimeZoneByCoordinate(
 		double latitude,
 		double longitude,
 		DateTimeOffset? dateTime,
 		string languageCode = "en-US") {
-		var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude);
+		return GetTimeZoneByCoordinate(new Coordinate {
+			Latitude = latitude,
+			Longitude = longitude
+		}, dateTime, languageCode);
+	}
+
+	/// <summary>
+	/// Returns the time zone by the specified point coordinate for an instant in time.
+	/// </summary>
+	/// <param name="coordinate">The coordinate.</param>
+	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
+	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <returns>The time zone.</returns>
+	public static TimeZone? GetTimeZoneByCoordinate(
+		ICoordinate coordinate,
+		DateTimeOffset? dateTime,
+		string languageCode = "en-US") {
+		var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
 
 		return GetTimeZoneByIanaId(ianaId.Result, dateTime, languageCode);
 	}
@@ -137,9 +167,9 @@ public static class TimeZones {
 	/// <param name="ianaId">The time zone's IANA id.</param>
 	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
 	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByIanaId(
+	public static TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
-		string languageCode = "en-US") => GetTimeZones(languageCode).First(
+		string languageCode = "en-US") => GetTimeZones(languageCode).FirstOrDefault(
 		tz => tz?.IanaId == ianaId);
 
 	/// <summary>
@@ -149,10 +179,10 @@ public static class TimeZones {
 	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
 	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
 	/// <returns>The time zone.</returns>
-	public static TimeZone GetTimeZoneByIanaId(
+	public static TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
 		DateTimeOffset? dateTime,
-		string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).First(
+		string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).FirstOrDefault(
 		tz => tz?.IanaId == ianaId);
 
 	/// <summary>
