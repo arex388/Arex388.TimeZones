@@ -1,4 +1,8 @@
-﻿#### 2.0.4
+﻿#### 2.0.5 (2024-10-13)
+
+- **Updated:** NuGet packages.
+
+#### 2.0.4
 
 - **Updated:** NuGet packages.
 
