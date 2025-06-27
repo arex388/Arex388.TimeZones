@@ -183,8 +183,11 @@ public static class TimeZones {
     /// <returns>The time zone.</returns>
     public static TimeZone? GetTimeZoneByIanaId(
         string ianaId,
-        string languageCode = "en-US") => GetTimeZones(languageCode).FirstOrDefault(
-        tz => tz?.IanaId == ianaId);
+        string languageCode = "en-US") {
+        var instant = SystemClock.Instance.GetCurrentInstant();
+
+        return GetTimeZoneByIanaId(ianaId, instant, languageCode);
+    }
 
     /// <summary>
     /// Returns the time zone by the IANA id for an instant in time.
@@ -196,8 +199,55 @@ public static class TimeZones {
     public static TimeZone? GetTimeZoneByIanaId(
         string ianaId,
         DateTimeOffset? dateTime,
-        string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).FirstOrDefault(
-        tz => tz?.IanaId == ianaId);
+        string languageCode = "en-US") {
+        if (dateTime is null) {
+            throw new ArgumentNullException(nameof(dateTime));
+        }
+
+        var instant = dateTime.Value.ToInstant();
+
+        return GetTimeZoneByIanaId(ianaId, instant, languageCode);
+    }
+
+    /// <summary>
+    /// Returns the time zone by the IANA id for an instant in time.
+    /// </summary>
+    /// <param name="ianaId">The time zone's IANA id.</param>
+    /// <param name="instant">The instant in time.</param>
+    /// <param name="languageCode">The language code to use. "en-US" by default.</param>
+    /// <returns>The time zone.</returns>
+    private static TimeZone? GetTimeZoneByIanaId(
+        string ianaId,
+        Instant instant,
+        string languageCode = "en-US") {
+        var dtz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(ianaId);
+
+        if (dtz is null) {
+            return null;
+        }
+
+        var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(dtz.Id, out var windowsTimeZoneId);
+
+        if (!gotWindowsTimeZoneId
+            || windowsTimeZoneId is null) {
+            return null;
+        }
+
+        var isDaylightSavings = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(instant.ToDateTimeOffset());
+        var abbreviation = TZNames.GetAbbreviationsForTimeZone(dtz.Id, languageCode);
+        var offset = dtz.GetUtcOffset(instant);
+
+        return new TimeZone {
+            Abbreviation = (isDaylightSavings
+                ? abbreviation.Daylight
+                : abbreviation.Standard) ?? dtz.Id,
+            IanaId = dtz.Id,
+            IsDaylightSavings = isDaylightSavings,
+            UtcOffset = offset.ToFormattedString(),
+            UtcOffsetTs = offset.ToTimeSpan(),
+            WindowsId = windowsTimeZoneId
+        };
+    }
 
     /// <summary>
     /// Returns the time zones by the Windows id for the current instant in time.
