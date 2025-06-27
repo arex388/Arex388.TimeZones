@@ -7,32 +7,32 @@ public sealed class TimeZone {
     /// <summary>
     /// The time zone's abbreviation.
     /// </summary>
-    public string Abbreviation { get; set; } = null!;
+    public required string Abbreviation { get; init; }
 
     /// <summary>
     /// The time zone's IANA id.
     /// </summary>
-    public string IanaId { get; set; } = null!;
+    public required string IanaId { get; init; }
 
     /// <summary>
     /// Flag indicating the time zone is currently in daylight savings.
     /// </summary>
-    public bool IsDaylightSavings { get; set; }
+    public required bool IsDaylightSavings { get; init; }
 
     /// <summary>
     /// The time zone's UTC offset.
     /// </summary>
     [Obsolete("Use UtcOffsetTs instead. This will be removed in 2.1.0.")]
-    public string UtcOffset { get; set; } = null!;
+    public required string UtcOffset { get; init; }
 
     /// <summary>
     /// The time zone's UTC offset.
     /// </summary>
     [Obsolete("This will be renamed to UtcOffset in 2.2.0.")]
-    public TimeSpan UtcOffsetTs { get; set; }
+    public required TimeSpan UtcOffsetTs { get; init; }
 
     /// <summary>
     /// The time zone's Windows id.
     /// </summary>
-    public string WindowsId { get; set; } = null!;
+    public required string WindowsId { get; init; }
 }

@@ -107,6 +107,14 @@ public static class TimeZones {
     public static TimeZone? GetTimeZoneByCoordinate(
         ICoordinate coordinate,
         string languageCode = "en-US") {
+        if (coordinate.Latitude is < -90 or > 90) {
+            throw new ArgumentOutOfRangeException(nameof(coordinate.Latitude), $"Latitude must be between -90 and 90. Received: {coordinate.Latitude}");
+        }
+
+        if (coordinate.Longitude is < -180 or > 180) {
+            throw new ArgumentOutOfRangeException(nameof(coordinate.Longitude), $"Longitude must be between -180 and 180. Received: {coordinate.Longitude}");
+        }
+
         var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
 
         return GetTimeZoneByIanaId(ianaId.Result, languageCode);
@@ -138,12 +146,10 @@ public static class TimeZones {
         double latitude,
         double longitude,
         DateTimeOffset? dateTime,
-        string languageCode = "en-US") {
-        return GetTimeZoneByCoordinate(new Coordinate {
+        string languageCode = "en-US") => GetTimeZoneByCoordinate(new Coordinate {
             Latitude = latitude,
             Longitude = longitude
         }, dateTime, languageCode);
-    }
 
     /// <summary>
     /// Returns the time zone by the specified point coordinate for an instant in time.
@@ -156,6 +162,14 @@ public static class TimeZones {
         ICoordinate coordinate,
         DateTimeOffset? dateTime,
         string languageCode = "en-US") {
+        if (coordinate.Latitude is < -90 or > 90) {
+            throw new ArgumentOutOfRangeException(nameof(coordinate.Latitude), $"Latitude must be between -90 and 90. Received: {coordinate.Latitude}");
+        }
+
+        if (coordinate.Longitude is < -180 or > 180) {
+            throw new ArgumentOutOfRangeException(nameof(coordinate.Longitude), $"Longitude must be between -180 and 180. Received: {coordinate.Longitude}");
+        }
+
         var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
 
         return GetTimeZoneByIanaId(ianaId.Result, dateTime, languageCode);
