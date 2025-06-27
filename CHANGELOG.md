@@ -1,4 +1,10 @@
-﻿#### 2.0.6 (2025-02-18)
+﻿# CHANGE LOG
+
+#### 2.0.7 (2025-06-27)
+
+- **Updated:** NuGet packages.
+
+#### 2.0.6 (2025-02-18)
 
 - **Updated:** NuGet packages.
 
