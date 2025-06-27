@@ -1,5 +1,18 @@
 ﻿# CHANGE LOG
 
+#### 3.0.0 (2025-06-27)
+
+> [!WARNING]
+>
+> This version has breaking changes.
+
+- **Changed:** `Microsoft.Extensions.Caching.Abstractions` is now **required** for internal use of `IMemoryCache`.
+- **Changed:** `Microsoft.Extensions.DependencyInjection.Abstractions` is now **required** for dependency injection registration.
+- **Changed:** `TimeZones` from a static class to a sealed class and made internal.
+- **Added:** `ITimeZones` interface for public use.
+- **Added:** `AddTimeZones()` extension method to `IServiceCollection` to register interface.
+- **Added:** Caching for `GetTimeZones()` method with 1 hour expiration.
+
 #### 2.0.8 (2025-06-27)
 
 - **Changed:** Minor clean up and optimizations to improve performance.
