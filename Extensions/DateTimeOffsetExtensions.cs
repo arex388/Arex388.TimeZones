@@ -4,12 +4,12 @@
 /// DateTimeOffset extensions.
 /// </summary>
 public static class DateTimeOffsetExtensions {
-    [Obsolete("Use AtTimeZone() with UTC offset TimeSpan argument. This will be removed in 2.1.0.")]
+    [Obsolete("Use AtTimeZone() with UTC offset TimeSpan argument. This will be removed in 3.1.0.")]
     public static DateTimeOffset? AtTimeZone(
         this DateTimeOffset? value,
         Arex388.TimeZones.TimeZone timeZone) => value?.AtTimeZone(timeZone);
 
-    [Obsolete("Use AtTimeZone() with UTC offset TimeSpan argument. This will be removed in 2.1.0.")]
+    [Obsolete("Use AtTimeZone() with UTC offset TimeSpan argument. This will be removed in 3.1.0.")]
     public static DateTimeOffset AtTimeZone(
         this DateTimeOffset value,
         Arex388.TimeZones.TimeZone timeZone) {

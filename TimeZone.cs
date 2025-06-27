@@ -22,13 +22,13 @@ public sealed class TimeZone {
     /// <summary>
     /// The time zone's UTC offset.
     /// </summary>
-    [Obsolete("Use UtcOffsetTs instead. This will be removed in 2.1.0.")]
+    [Obsolete("Use UtcOffsetTs instead. This will be removed in 3.1.0.")]
     public required string UtcOffset { get; init; }
 
     /// <summary>
     /// The time zone's UTC offset.
     /// </summary>
-    [Obsolete("This will be renamed to UtcOffset in 2.2.0.")]
+    [Obsolete("This will be renamed to UtcOffset in 3.2.0.")]
     public required TimeSpan UtcOffsetTs { get; init; }
 
     /// <summary>

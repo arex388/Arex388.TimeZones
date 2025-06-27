@@ -1,5 +1,9 @@
 ﻿# CHANGE LOG
 
+#### 2.0.8 (2025-06-27)
+
+- **Changed:** Minor clean up and optimizations to improve performance.
+
 #### 2.0.7 (2025-06-27)
 
 - **Updated:** NuGet packages.
