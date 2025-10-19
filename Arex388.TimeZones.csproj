@@ -11,7 +11,7 @@
 		<PackageTags>arex388 timezone</PackageTags>
 		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<Version>3.0.0</Version>
+		<Version>3.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,7 +23,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="TimeZoneConverter" Version="7.0.0" />
+		<PackageReference Include="TimeZoneConverter" Version="7.1.0" />
 		<PackageReference Include="TimeZoneNames" Version="7.0.0" />
 	</ItemGroup>
 
