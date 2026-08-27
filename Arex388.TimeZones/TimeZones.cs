@@ -1,29 +1,23 @@
-﻿using System.Collections.Concurrent;
-using GeoTimeZone;
+﻿using GeoTimeZone;
 using NodaTime;
 using NodaTime.Extensions;
 using NodaTime.TimeZones;
+using System.Collections.Concurrent;
 using TimeZoneConverter;
 using TimeZoneNames;
 
 namespace Arex388.TimeZones;
 
-internal sealed class TimeZones :
+internal sealed class TimeZones(
+	TimeZonesOptions options,
+	TimeProvider timeProvider) :
 	ITimeZones {
 	private static readonly ZoneLocalMappingResolver _lenientResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnEarlier, Resolvers.ReturnForwardShifted);
 
 	private readonly ConcurrentDictionary<string, Lazy<TimeZoneCatalog>> _catalogs = new(StringComparer.OrdinalIgnoreCase);
-	private readonly string _defaultLanguageCode;
-	private readonly IDateTimeZoneProvider _provider;
-	private readonly TimeProvider _timeProvider;
-
-	public TimeZones(
-		TimeZonesOptions options,
-		TimeProvider timeProvider) {
-		_defaultLanguageCode = options.DefaultLanguageCode ?? throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} must not be null.", nameof(options));
-		_provider = options.DateTimeZoneProvider ?? DateTimeZoneProviders.Tzdb;
-		_timeProvider = timeProvider;
-	}
+	private readonly string _defaultLanguageCode = options.DefaultLanguageCode ?? throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} must not be null.", nameof(options));
+	private readonly IDateTimeZoneProvider _provider = options.DateTimeZoneProvider ?? DateTimeZoneProviders.Tzdb;
+	private readonly TimeProvider _timeProvider = timeProvider;
 
 	public string TzdbVersion => _provider.VersionId;
 
@@ -60,13 +54,9 @@ internal sealed class TimeZones :
 	public TimeZone? GetTimeZoneByCoordinate(
 		ICoordinate coordinate,
 		DateTimeOffset at,
-		string? languageCode = null) {
-		if (coordinate is null) {
-			throw new ArgumentNullException(nameof(coordinate));
-		}
-
-		return GetTimeZoneByCoordinateCore(coordinate.Latitude, coordinate.Longitude, nameof(coordinate), nameof(coordinate), at, languageCode);
-	}
+		string? languageCode = null) => coordinate is null
+		? throw new ArgumentNullException(nameof(coordinate))
+		: GetTimeZoneByCoordinateCore(coordinate.Latitude, coordinate.Longitude, nameof(coordinate), nameof(coordinate), at, languageCode);
 
 	private TimeZone? GetTimeZoneByCoordinateCore(
 		double latitude,
@@ -75,11 +65,15 @@ internal sealed class TimeZones :
 		string longitudeParamName,
 		DateTimeOffset at,
 		string? languageCode) {
+		#pragma warning disable IDE0083
 		if (!(latitude is >= -90 and <= 90)) {
+			#pragma warning restore IDE0083
 			throw new ArgumentOutOfRangeException(latitudeParamName, latitude, "Latitude must be between -90 and 90.");
 		}
 
+		#pragma warning disable IDE0083
 		if (!(longitude is >= -180 and <= 180)) {
+			#pragma warning restore IDE0083
 			throw new ArgumentOutOfRangeException(longitudeParamName, longitude, "Longitude must be between -180 and 180.");
 		}
 
@@ -154,13 +148,9 @@ internal sealed class TimeZones :
 	public IReadOnlyList<TimeZone> GetTimeZonesByWindowsId(
 		string windowsId,
 		DateTimeOffset at,
-		string? languageCode = null) {
-		if (windowsId is null) {
-			throw new ArgumentNullException(nameof(windowsId));
-		}
-
-		return Snapshot(GetCatalog(languageCode).GetByWindowsId(windowsId), at);
-	}
+		string? languageCode = null) => windowsId is null
+		? throw new ArgumentNullException(nameof(windowsId))
+		: Snapshot(GetCatalog(languageCode).GetByWindowsId(windowsId), at);
 
 	//  ================================================================================
 	//  Conversions

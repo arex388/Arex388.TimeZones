@@ -26,10 +26,12 @@ internal sealed class TimeZoneCatalog {
 	private TimeZoneCatalog(
 		Entry[] entries) {
 		Entries = entries;
-		_byIanaId = entries.ToDictionary(e => e.IanaId, StringComparer.OrdinalIgnoreCase);
-		_byWindowsId = entries
-			.GroupBy(e => e.WindowsId, StringComparer.OrdinalIgnoreCase)
-			.ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
+		_byIanaId = entries.ToDictionary(
+			e => e.IanaId, StringComparer.OrdinalIgnoreCase);
+		_byWindowsId = entries.GroupBy(
+			e => e.WindowsId, StringComparer.OrdinalIgnoreCase).ToDictionary(
+			g => g.Key,
+			g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
 	}
 
 	/// <summary>
@@ -53,7 +55,7 @@ internal sealed class TimeZoneCatalog {
 			}
 
 			var canonicalIanaId = canonicalIds.TryGetValue(ianaId, out var canonical)
-				&& provider.GetZoneOrNull(canonical) is not null
+			&& provider.GetZoneOrNull(canonical) is not null
 				? canonical
 				: ianaId;
 
@@ -69,7 +71,9 @@ internal sealed class TimeZoneCatalog {
 
 		entries.Sort((a, b) => string.CompareOrdinal(a.IanaId, b.IanaId));
 
-		return new TimeZoneCatalog(entries.ToArray());
+		return new TimeZoneCatalog([
+			.. entries
+		]);
 	}
 
 	public Entry? GetByIanaId(
@@ -120,10 +124,10 @@ internal sealed class TimeZoneCatalog {
 			return true;
 		}
 
-		return interval.HasStart
-			&& zone.GetZoneInterval(interval.Start - Duration.Epsilon).Savings < Offset.Zero
-			|| interval.HasEnd
-			&& zone.GetZoneInterval(interval.End).Savings < Offset.Zero;
+		return (interval.HasStart
+				&& zone.GetZoneInterval(interval.Start - Duration.Epsilon).Savings < Offset.Zero)
+			|| (interval.HasEnd
+				&& zone.GetZoneInterval(interval.End).Savings < Offset.Zero);
 	}
 
 	private static string? Pick(

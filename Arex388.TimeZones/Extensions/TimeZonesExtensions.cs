@@ -10,47 +10,44 @@ public static class TimeZonesExtensions {
 	//  ITimeZones, nullable-lifting
 	//  ================================================================================
 
-	/// <summary>
-	/// <see cref="ITimeZones.AtTimeZone(DateTime, string)"/> lifted over <see langword="null"/>: a <see langword="null"/> wall clock returns <see langword="null"/>.
-	/// </summary>
 	/// <param name="timeZones">The service.</param>
-	/// <param name="wallClock">The date and time as read from a clock in the zone, or <see langword="null"/>.</param>
-	/// <param name="ianaId">The IANA id of the zone.</param>
-	/// <returns>The wall clock with the zone's offset, or <see langword="null"/>.</returns>
-	public static DateTimeOffset? AtTimeZone(
-		this ITimeZones timeZones,
-		DateTime? wallClock,
-		string ianaId) => wallClock is null
-		? null
-		: timeZones.AtTimeZone(wallClock.Value, ianaId);
+	extension(ITimeZones timeZones) {
+		/// <summary>
+		/// <see cref="ITimeZones.AtTimeZone(DateTime, string)"/> lifted over <see langword="null"/>: a <see langword="null"/> wall clock returns <see langword="null"/>.
+		/// </summary>
+		/// <param name="wallClock">The date and time as read from a clock in the zone, or <see langword="null"/>.</param>
+		/// <param name="ianaId">The IANA id of the zone.</param>
+		/// <returns>The wall clock with the zone's offset, or <see langword="null"/>.</returns>
+		public DateTimeOffset? AtTimeZone(
+			DateTime? wallClock,
+			string ianaId) => wallClock is null
+			? null
+			: timeZones.AtTimeZone(wallClock.Value, ianaId);
 
-	/// <summary>
-	/// <see cref="ITimeZones.AtTimeZone(DateTimeOffset, string)"/> lifted over <see langword="null"/>: a <see langword="null"/> wall clock returns <see langword="null"/>.
-	/// </summary>
-	/// <param name="timeZones">The service.</param>
-	/// <param name="wallClock">The date and time as read from a clock in the zone, or <see langword="null"/>.</param>
-	/// <param name="ianaId">The IANA id of the zone.</param>
-	/// <returns>The wall clock with the zone's offset, or <see langword="null"/>.</returns>
-	public static DateTimeOffset? AtTimeZone(
-		this ITimeZones timeZones,
-		DateTimeOffset? wallClock,
-		string ianaId) => wallClock is null
-		? null
-		: timeZones.AtTimeZone(wallClock.Value, ianaId);
+		/// <summary>
+		/// <see cref="ITimeZones.AtTimeZone(DateTimeOffset, string)"/> lifted over <see langword="null"/>: a <see langword="null"/> wall clock returns <see langword="null"/>.
+		/// </summary>
+		/// <param name="wallClock">The date and time as read from a clock in the zone, or <see langword="null"/>.</param>
+		/// <param name="ianaId">The IANA id of the zone.</param>
+		/// <returns>The wall clock with the zone's offset, or <see langword="null"/>.</returns>
+		public DateTimeOffset? AtTimeZone(
+			DateTimeOffset? wallClock,
+			string ianaId) => wallClock is null
+			? null
+			: timeZones.AtTimeZone(wallClock.Value, ianaId);
 
-	/// <summary>
-	/// <see cref="ITimeZones.InTimeZone"/> lifted over <see langword="null"/>: a <see langword="null"/> value returns <see langword="null"/>.
-	/// </summary>
-	/// <param name="timeZones">The service.</param>
-	/// <param name="value">The instant, or <see langword="null"/>.</param>
-	/// <param name="ianaId">The IANA id of the zone.</param>
-	/// <returns>The same instant with the zone's wall clock and offset, or <see langword="null"/>.</returns>
-	public static DateTimeOffset? InTimeZone(
-		this ITimeZones timeZones,
-		DateTimeOffset? value,
-		string ianaId) => value is null
-		? null
-		: timeZones.InTimeZone(value.Value, ianaId);
+		/// <summary>
+		/// <see cref="ITimeZones.InTimeZone"/> lifted over <see langword="null"/>: a <see langword="null"/> value returns <see langword="null"/>.
+		/// </summary>
+		/// <param name="value">The instant, or <see langword="null"/>.</param>
+		/// <param name="ianaId">The IANA id of the zone.</param>
+		/// <returns>The same instant with the zone's wall clock and offset, or <see langword="null"/>.</returns>
+		public DateTimeOffset? InTimeZone(
+			DateTimeOffset? value,
+			string ianaId) => value is null
+			? null
+			: timeZones.InTimeZone(value.Value, ianaId);
+	}
 
 	//  ================================================================================
 	//  DateTimeOffset, offset swap

@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Arex388.TimeZones;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Arex388.TimeZones;
+namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// <see cref="IServiceCollection"/> registration for <see cref="ITimeZones"/>.
@@ -21,7 +21,8 @@ public static class ServiceCollectionExtensions {
 
 		configure?.Invoke(options);
 
-		services.TryAddSingleton<ITimeZones>(sp => new TimeZones(options, sp.GetService<TimeProvider>() ?? TimeProvider.System));
+		services.TryAddSingleton<ITimeZones>(
+			sp => new TimeZones(options, sp.GetService<TimeProvider>() ?? TimeProvider.System));
 
 		return services;
 	}
