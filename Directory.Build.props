@@ -1,0 +1,18 @@
+<Project>
+	<PropertyGroup>
+		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<TargetFramework>net10.0</TargetFramework>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<Version>3.0.1</Version>
+		<!--
+			Tolerated warnings, so the build still fails on any new warning kind:
+			- CS0618 / CS1591 / CS9042 on the members scheduled for removal in 3.1.0 (and
+			  the UtcOffsetTs rename in 3.2.0); drop each code as those land.
+			- CS8619, one nullability mismatch in TimeZones.GetTimeZones.
+		-->
+		<WarningsNotAsErrors>CS0618;CS1591;CS8619;CS9042</WarningsNotAsErrors>
+	</PropertyGroup>
+</Project>

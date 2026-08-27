@@ -4,15 +4,23 @@
 		<Authors>Arex388</Authors>
 		<Description>Arex388.TimeZones is a small .NET Standard 2.0 library for time zone discovery in the past, present or future by a geospatial coordinate, IANA id, or Windows id.</Description>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>arex388 timezone</PackageTags>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<Version>3.0.1</Version>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="GeoTimeZone" Version="6.0.0" />
