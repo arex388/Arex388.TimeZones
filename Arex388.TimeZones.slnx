@@ -4,5 +4,6 @@
 		<File Path="LICENSE" />
 		<File Path="README.md" />
 	</Folder>
+	<Project Path="Arex388.TimeZones.Tests/Arex388.TimeZones.Tests.csproj" />
 	<Project Path="Arex388.TimeZones/Arex388.TimeZones.csproj" />
 </Solution>
