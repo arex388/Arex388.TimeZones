@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using NodaTime;
 using NodaTime.TimeZones;
 
 namespace Arex388.TimeZones.Tests;

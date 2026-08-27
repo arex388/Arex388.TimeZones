@@ -10,6 +10,17 @@
 /// <see cref="TimeZonesOptions.DefaultLanguageCode"/> when <see langword="null"/>. Single lookups return
 /// <see langword="null"/> for an unknown IANA or Windows id and for a zone without a Windows mapping;
 /// argument errors throw.
+/// <para>
+/// Two limits of <see cref="DateTimeOffset"/> apply to the conversions. It carries offsets only to the minute,
+/// so for the rare historical intervals with a sub-minute offset (local mean time before standard time; after
+/// 1950 only <c>Africa/Monrovia</c> until 1972, <c>Pacific/Niue</c>, and <c>Pacific/Rarotonga</c>) the result is
+/// truncated to the minute — <see cref="InTimeZone"/> is then up to 59 seconds off the instant, and
+/// <see cref="TimeZone.UtcOffset"/>, which is exact, cannot be passed to
+/// <see cref="TimeZonesExtensions.AtTimeZone(DateTimeOffset, TimeSpan)"/>. And a result outside the
+/// <see cref="DateTimeOffset"/> range (a wall clock or instant within hours of
+/// <see cref="DateTimeOffset.MinValue"/> / <see cref="DateTimeOffset.MaxValue"/>) throws
+/// <see cref="ArgumentOutOfRangeException"/> or <see cref="InvalidOperationException"/> from the conversion.
+/// </para>
 /// </remarks>
 public interface ITimeZones {
 	/// <summary>
@@ -47,7 +58,7 @@ public interface ITimeZones {
 	//  ================================================================================
 
 	/// <summary>
-	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to <c>UTC</c>.
+	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to the nautical zone (<c>Etc/GMT±N</c>; <c>UTC</c> within 7.5° of the prime meridian).
 	/// </summary>
 	/// <param name="latitude">The latitude, −90 to 90.</param>
 	/// <param name="longitude">The longitude, −180 to 180.</param>
@@ -61,7 +72,7 @@ public interface ITimeZones {
 		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to <c>UTC</c>.
+	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to the nautical zone (<c>Etc/GMT±N</c>; <c>UTC</c> within 7.5° of the prime meridian).
 	/// </summary>
 	/// <param name="latitude">The latitude, −90 to 90.</param>
 	/// <param name="longitude">The longitude, −180 to 180.</param>
@@ -77,7 +88,7 @@ public interface ITimeZones {
 		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to <c>UTC</c>.
+	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to the nautical zone (<c>Etc/GMT±N</c>; <c>UTC</c> within 7.5° of the prime meridian).
 	/// </summary>
 	/// <param name="coordinate">The coordinate.</param>
 	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
@@ -90,7 +101,7 @@ public interface ITimeZones {
 		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to <c>UTC</c>.
+	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to the nautical zone (<c>Etc/GMT±N</c>; <c>UTC</c> within 7.5° of the prime meridian).
 	/// </summary>
 	/// <param name="coordinate">The coordinate.</param>
 	/// <param name="at">The instant to compute the offset and daylight-savings state for.</param>

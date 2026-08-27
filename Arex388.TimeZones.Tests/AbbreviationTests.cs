@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Arex388.TimeZones.Tests;
 
@@ -61,6 +62,15 @@ public sealed class AbbreviationTests {
 		var act = () => _timeZones.GetTimeZoneByIanaId("UTC", TestServices.January, "xx-XX");
 
 		act.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("languageCode");
+	}
+
+	[Fact]
+	public void UnknownDefaultLanguageCode_FailsAtResolution() {
+		using var provider = TestServices.CreateProvider(o => o.DefaultLanguageCode = "xx-XX");
+
+		var act = () => provider.GetRequiredService<ITimeZones>();
+
+		act.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("options");
 	}
 
 	[Fact]

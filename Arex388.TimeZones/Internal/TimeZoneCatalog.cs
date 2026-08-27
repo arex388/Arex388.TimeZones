@@ -110,8 +110,10 @@ internal sealed class TimeZoneCatalog {
 
 	/// <summary>
 	/// TZDB's savings, normalized for zones that model winter as negative savings: a negative saving is
-	/// standard time, a positive one is daylight savings, and a zero saving adjacent to a negative one is the
-	/// summer half of a negative-DST zone.
+	/// standard time, a positive one is daylight savings, and a bounded zero saving adjacent to a negative one
+	/// is the summer half of a negative-DST zone. An interval with no end is permanent time and never daylight
+	/// savings — otherwise a zone that abolished negative DST (Africa/Windhoek, 2017) would report daylight
+	/// savings forever because its final interval follows the last negative winter.
 	/// </summary>
 	private static bool IsDaylightSavings(
 		DateTimeZone zone,
@@ -124,10 +126,10 @@ internal sealed class TimeZoneCatalog {
 			return true;
 		}
 
-		return (interval.HasStart
-				&& zone.GetZoneInterval(interval.Start - Duration.Epsilon).Savings < Offset.Zero)
-			|| (interval.HasEnd
-				&& zone.GetZoneInterval(interval.End).Savings < Offset.Zero);
+		return interval.HasEnd
+			&& ((interval.HasStart
+					&& zone.GetZoneInterval(interval.Start - Duration.Epsilon).Savings < Offset.Zero)
+				|| zone.GetZoneInterval(interval.End).Savings < Offset.Zero);
 	}
 
 	private static string? Pick(

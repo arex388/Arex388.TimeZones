@@ -42,7 +42,8 @@ public sealed record TimeZone {
 
 	/// <summary>
 	/// Whether daylight savings is in effect at <see cref="At"/>, computed from TZDB. Zones with negative daylight
-	/// savings (Europe/Dublin, Africa/Casablanca) report the user-facing state: summer is daylight savings.
+	/// savings (Europe/Dublin, Africa/Casablanca) report the user-facing state: summer is daylight savings. A zone
+	/// on permanent time (its current TZDB interval has no end) is never in daylight savings.
 	/// </summary>
 	public required bool IsDaylightSavings { get; init; }
 

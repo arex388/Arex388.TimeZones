@@ -10,6 +10,8 @@ public sealed class CoordinateTests {
 	[InlineData(36.0, -114.9, "America/Los_Angeles")]
 	[InlineData(0.0, 0.0, "UTC")]
 	[InlineData(90.0, 0.0, "UTC")]
+	[InlineData(0.0, -30.0, "Etc/GMT+2")]
+	[InlineData(0.0, 180.0, "Etc/GMT-12")]
 	[InlineData(-90.0, 180.0, "Antarctica/McMurdo")]
 	public void GetTimeZoneByCoordinate_ResolvesExpectedZone(
 		double latitude,

@@ -60,6 +60,8 @@ public static class TimeZonesExtensions {
 	/// <param name="value">The value.</param>
 	/// <param name="utcOffset">The offset for the result.</param>
 	/// <returns>The wall clock of <paramref name="value"/> at <paramref name="utcOffset"/>.</returns>
+	/// <exception cref="ArgumentException"><paramref name="utcOffset"/> is not a whole number of minutes — a <see cref="DateTimeOffset"/> cannot carry the sub-minute offsets of some historical TZDB intervals.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="utcOffset"/> is outside ±14 hours, or the result is outside the <see cref="DateTimeOffset"/> range.</exception>
 	public static DateTimeOffset AtTimeZone(
 		this DateTimeOffset value,
 		TimeSpan utcOffset) => new(value.DateTime, utcOffset);
@@ -70,6 +72,8 @@ public static class TimeZonesExtensions {
 	/// <param name="value">The value, or <see langword="null"/>.</param>
 	/// <param name="utcOffset">The offset for the result.</param>
 	/// <returns>The wall clock of <paramref name="value"/> at <paramref name="utcOffset"/>, or <see langword="null"/>.</returns>
+	/// <exception cref="ArgumentException"><paramref name="utcOffset"/> is not a whole number of minutes.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="utcOffset"/> is outside ±14 hours, or the result is outside the <see cref="DateTimeOffset"/> range.</exception>
 	[return: NotNullIfNotNull(nameof(value))]
 	public static DateTimeOffset? AtTimeZone(
 		this DateTimeOffset? value,

@@ -10,10 +10,14 @@ public sealed class DaylightSavingsTests {
 	//	user-facing IsDaylightSavings flag for each. Europe/Dublin and
 	//	Africa/Casablanca are the negative-DST zones: TZDB models their winter as
 	//	negative savings, and the library normalizes that so summer is DST.
+	//	Africa/Windhoek used negative DST until 2017 and is on permanent +02 since;
+	//	its unbounded final interval follows the last negative winter and must not
+	//	be flagged.
 	[Theory]
 	[InlineData("America/New_York", -300, false, -240, true)]
 	[InlineData("Europe/London", 0, false, 60, true)]
 	[InlineData("Europe/Dublin", 0, false, 60, true)]
+	[InlineData("Africa/Windhoek", 120, false, 120, false)]
 	[InlineData("Australia/Sydney", 660, true, 600, false)]
 	[InlineData("Asia/Kolkata", 330, false, 330, false)]
 	[InlineData("Asia/Kathmandu", 345, false, 345, false)]

@@ -15,7 +15,7 @@ internal sealed class TimeZones(
 	private static readonly ZoneLocalMappingResolver _lenientResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnEarlier, Resolvers.ReturnForwardShifted);
 
 	private readonly ConcurrentDictionary<string, Lazy<TimeZoneCatalog>> _catalogs = new(StringComparer.OrdinalIgnoreCase);
-	private readonly string _defaultLanguageCode = options.DefaultLanguageCode ?? throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} must not be null.", nameof(options));
+	private readonly string _defaultLanguageCode = ValidateDefaultLanguageCode(options);
 	private readonly IDateTimeZoneProvider _provider = options.DateTimeZoneProvider ?? DateTimeZoneProviders.Tzdb;
 	private readonly TimeProvider _timeProvider = timeProvider;
 
@@ -225,6 +225,42 @@ internal sealed class TimeZones(
 
 	private DateTimeOffset Now => _timeProvider.GetUtcNow();
 
+	/// <summary>
+	/// Rejects a null or unknown default language at construction — so a bad
+	/// TimeZonesOptions fails at resolution, not on the first call that happens to
+	/// need names.
+	/// </summary>
+	private static string ValidateDefaultLanguageCode(
+		TimeZonesOptions options) {
+		var languageCode = options.DefaultLanguageCode ?? throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} must not be null.", nameof(options));
+
+		if (!IsKnownLanguageCode(languageCode, out var e)) {
+			throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} '{languageCode}' is not a language code TimeZoneNames knows.", nameof(options), e);
+		}
+
+		return languageCode;
+	}
+
+	/// <summary>
+	/// TimeZoneNames throws a bare Exception for an unknown language; probe once so the
+	/// caller gets an argument error instead.
+	/// </summary>
+	private static bool IsKnownLanguageCode(
+		string languageCode,
+		out Exception? exception) {
+		try {
+			_ = TZNames.GetNamesForTimeZone("UTC", languageCode);
+
+			exception = null;
+
+			return true;
+		} catch (Exception e) when (e is not ArgumentException) {
+			exception = e;
+
+			return false;
+		}
+	}
+
 	private TimeZoneCatalog GetCatalog(
 		string? languageCode) {
 		languageCode ??= _defaultLanguageCode;
@@ -233,11 +269,8 @@ internal sealed class TimeZones(
 			return cached.Value;
 		}
 
-		//	TimeZoneNames throws a bare Exception for an unknown language; validate once, before the
-		//	catalog is built, so the caller gets an argument error and nothing is cached for it.
-		try {
-			_ = TZNames.GetNamesForTimeZone("UTC", languageCode);
-		} catch (Exception e) when (e is not ArgumentException) {
+		//	Validate before the catalog is built, so nothing is cached for a bad code.
+		if (!IsKnownLanguageCode(languageCode, out var e)) {
 			throw new ArgumentException($"'{languageCode}' is not a language code TimeZoneNames knows.", nameof(languageCode), e);
 		}
 

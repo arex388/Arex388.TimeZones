@@ -64,16 +64,39 @@ public sealed class ConversionTests {
 	}
 
 	[Fact]
-	public void AtTimeZone_UnknownZone_ReturnsNullAndFalse() {
-		_timeZones.AtTimeZone(new DateTime(2026, 1, 1), "Nowhere/Unknown").Should().BeNull();
-		_timeZones.TryAtTimeZone(new DateTime(2026, 1, 1), "Nowhere/Unknown", out _, out _).Should().BeFalse();
+	public void TryAtTimeZone_DateTimeOffset_ForwardsTheWallClock() {
+		var wallClock = new DateTimeOffset(2026, 11, 1, 1, 30, 0, TimeSpan.FromHours(9));
+
+		_timeZones.TryAtTimeZone(wallClock, NewYork, out var result, out var resolution).Should().BeTrue();
+
+		result.Should().Be(new DateTimeOffset(2026, 11, 1, 1, 30, 0, TimeSpan.FromHours(-4)));
+		result.Offset.Should().Be(TimeSpan.FromHours(-4));
+		resolution.Should().Be(TimeZoneResolution.Ambiguous);
 	}
 
 	[Fact]
-	public void AtTimeZone_NullIanaId_Throws() {
-		var act = () => _timeZones.AtTimeZone(new DateTime(2026, 1, 1), null!);
+	public void AtTimeZone_UnknownZone_ReturnsNullAndFalse() {
+		_timeZones.AtTimeZone(new DateTime(2026, 1, 1), "Nowhere/Unknown").Should().BeNull();
+		_timeZones.TryAtTimeZone(new DateTime(2026, 1, 1), "Nowhere/Unknown", out _, out _).Should().BeFalse();
+		_timeZones.TryAtTimeZone(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), "Nowhere/Unknown", out _, out _).Should().BeFalse();
+	}
 
-		act.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("ianaId");
+	[Fact]
+	public void Conversions_NullIanaId_Throw() {
+		var dateTime = new DateTime(2026, 1, 1);
+		var dateTimeOffset = new DateTimeOffset(dateTime, TimeSpan.Zero);
+
+		var acts = new Action[] {
+			() => _timeZones.AtTimeZone(dateTime, null!),
+			() => _timeZones.AtTimeZone(dateTimeOffset, null!),
+			() => _timeZones.TryAtTimeZone(dateTime, null!, out _, out _),
+			() => _timeZones.TryAtTimeZone(dateTimeOffset, null!, out _, out _),
+			() => _timeZones.InTimeZone(dateTimeOffset, null!)
+		};
+
+		foreach (var act in acts) {
+			act.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("ianaId");
+		}
 	}
 
 	//  ================================================================================

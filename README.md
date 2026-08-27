@@ -61,7 +61,7 @@ timeZones.GetTimeZonesByWindowsId("Eastern Standard Time");            // every 
 timeZones.GetTimeZones(at);                                            // every zone with a Windows mapping, ordered by IANA id
 ```
 
-Every lookup has an as-of-now form and an `at` form taking a `DateTimeOffset` instant (its offset is irrelevant beyond identifying the instant), and takes an optional language code for the names. Single lookups return `null` when the id is unknown or the zone has no Windows mapping; open ocean resolves to `UTC`. Argument errors throw: a `null` id, a coordinate outside ±90 / ±180 (NaN and infinity included), or a language code TimeZoneNames does not know.
+Every lookup has an as-of-now form and an `at` form taking a `DateTimeOffset` instant (its offset is irrelevant beyond identifying the instant), and takes an optional language code for the names. Single lookups return `null` when the id is unknown or the zone has no Windows mapping; open ocean resolves to the nautical zone (`Etc/GMT±N`; `UTC` within 7.5° of the prime meridian). Argument errors throw: a `null` id, a coordinate outside ±90 / ±180 (NaN and infinity included), or a language code TimeZoneNames does not know.
 
 `TimeZone` is a record:
 
