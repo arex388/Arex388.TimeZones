@@ -4,6 +4,8 @@
 		<Authors>Arex388</Authors>
 		<Description>Offline time zone discovery for .NET Standard 2.0 — by coordinate, IANA id, or Windows id — plus the two conversions consumers actually need: AtTimeZone (keep the wall clock, resolve the zone's offset) and InTimeZone (keep the instant, show it in the zone). Everything is computed from TZDB; nothing is read from the operating system.</Description>
 		<EnablePackageValidation>true</EnablePackageValidation>
+		<!-- The last published version. Bump it on every release; an intentional break needs a major version and a release note, never a CompatibilitySuppressions.xml entry. -->
+		<PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
