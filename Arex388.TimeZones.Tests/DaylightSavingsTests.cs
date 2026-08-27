@@ -7,7 +7,9 @@ public sealed class DaylightSavingsTests {
 	private readonly ITimeZones _timeZones = TestServices.CreateTimeZones();
 
 	//	Offsets in minutes at 2026-01-15T12:00Z and 2026-07-15T12:00Z, with the
-	//	IsDaylightSavings flag reported for each.
+	//	user-facing IsDaylightSavings flag for each. Europe/Dublin and
+	//	Africa/Casablanca are the negative-DST zones: TZDB models their winter as
+	//	negative savings, and the library normalizes that so summer is DST.
 	[Theory]
 	[InlineData("America/New_York", -300, false, -240, true)]
 	[InlineData("Europe/London", 0, false, 60, true)]
@@ -30,10 +32,8 @@ public sealed class DaylightSavingsTests {
 		january.Should().NotBeNull();
 		july.Should().NotBeNull();
 
-#pragma warning disable CS0618
-		january!.UtcOffsetTs.Should().Be(TimeSpan.FromMinutes(januaryMinutes));
-		july!.UtcOffsetTs.Should().Be(TimeSpan.FromMinutes(julyMinutes));
-#pragma warning restore CS0618
+		january!.UtcOffset.Should().Be(TimeSpan.FromMinutes(januaryMinutes));
+		july!.UtcOffset.Should().Be(TimeSpan.FromMinutes(julyMinutes));
 		january.IsDaylightSavings.Should().Be(januaryDst);
 		july.IsDaylightSavings.Should().Be(julyDst);
 	}
@@ -50,8 +50,14 @@ public sealed class DaylightSavingsTests {
 		var timeZone = _timeZones.GetTimeZoneByIanaId("America/New_York", at);
 
 		timeZone.Should().NotBeNull();
-#pragma warning disable CS0618
-		timeZone!.UtcOffsetTs.Should().Be(TimeSpan.FromMinutes(minutes));
-#pragma warning restore CS0618
+		timeZone!.UtcOffset.Should().Be(TimeSpan.FromMinutes(minutes));
+	}
+
+	[Fact]
+	public void GetTimeZoneByIanaId_At_OffsetDoesNotChangeTheInstant() {
+		var utc = new DateTimeOffset(2026, 3, 8, 7, 0, 0, TimeSpan.Zero);
+		var foreign = utc.ToOffset(TimeSpan.FromHours(9));
+
+		_timeZones.GetTimeZoneByIanaId("America/New_York", foreign).Should().Be(_timeZones.GetTimeZoneByIanaId("America/New_York", utc));
 	}
 }

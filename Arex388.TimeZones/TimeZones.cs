@@ -1,209 +1,269 @@
-﻿using GeoTimeZone;
-using Microsoft.Extensions.Caching.Memory;
+﻿using System.Collections.Concurrent;
+using GeoTimeZone;
 using NodaTime;
 using NodaTime.Extensions;
+using NodaTime.TimeZones;
 using TimeZoneConverter;
 using TimeZoneNames;
 
 namespace Arex388.TimeZones;
 
-internal sealed class TimeZones(
-	IMemoryCache cache) :
+internal sealed class TimeZones :
 	ITimeZones {
-	private static readonly MemoryCacheEntryOptions _cacheEntryOptions = new MemoryCacheEntryOptions {
-		AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
-		SlidingExpiration = TimeSpan.FromMinutes(15)
-	};
+	private static readonly ZoneLocalMappingResolver _lenientResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnEarlier, Resolvers.ReturnForwardShifted);
 
-	private readonly IMemoryCache _cache = cache;
+	private readonly ConcurrentDictionary<string, Lazy<TimeZoneCatalog>> _catalogs = new(StringComparer.OrdinalIgnoreCase);
+	private readonly string _defaultLanguageCode;
+	private readonly IDateTimeZoneProvider _provider;
+	private readonly TimeProvider _timeProvider;
 
-	public IEnumerable<TimeZone> GetTimeZones(
-		string languageCode = "en-US") {
-		var instant = SystemClock.Instance.GetCurrentInstant();
-
-		return GetTimeZones(instant, languageCode);
+	public TimeZones(
+		TimeZonesOptions options,
+		TimeProvider timeProvider) {
+		_defaultLanguageCode = options.DefaultLanguageCode ?? throw new ArgumentException($"{nameof(TimeZonesOptions.DefaultLanguageCode)} must not be null.", nameof(options));
+		_provider = options.DateTimeZoneProvider ?? DateTimeZoneProviders.Tzdb;
+		_timeProvider = timeProvider;
 	}
 
-	public IEnumerable<TimeZone> GetTimeZones(
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") {
-		if (dateTime is null) {
-			throw new ArgumentNullException(nameof(dateTime));
-		}
+	public string TzdbVersion => _provider.VersionId;
 
-		var instant = dateTime.Value.ToInstant();
+	//  ================================================================================
+	//  Lists
+	//  ================================================================================
 
-		return GetTimeZones(instant, languageCode);
-	}
+	public IReadOnlyList<TimeZone> GetTimeZones(
+		string? languageCode = null) => GetTimeZones(Now, languageCode);
 
-	public IEnumerable<TimeZone> GetTimeZones(
-		Instant instant,
-		string languageCode = "en-US") {
-		var hourInstant = instant.ToDateTimeOffset().Date.AddHours(instant.ToDateTimeOffset().Hour);
-		var cacheKey = $"{nameof(Arex388)}.{nameof(TimeZones)}.{languageCode}.{hourInstant:yyyy-MM-dd-HH}";
+	public IReadOnlyList<TimeZone> GetTimeZones(
+		DateTimeOffset at,
+		string? languageCode = null) => Snapshot(GetCatalog(languageCode).Entries, at);
 
-		if (_cache.TryGetValue(cacheKey, out var cached)
-			&& cached is List<TimeZone> timeZones) {
-			return timeZones;
-		}
-
-		timeZones = GetTimeZonesInternal(instant, languageCode).ToList();
-
-		_cache.Set(cacheKey, timeZones, _cacheEntryOptions);
-
-		return timeZones;
-	}
-
-	private static IEnumerable<TimeZone> GetTimeZonesInternal(
-		Instant instant,
-		string languageCode) => DateTimeZoneProviders.Tzdb.Ids.Select(
-		id => DateTimeZoneProviders.Tzdb[id]).Select(
-		dtz => {
-			var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(dtz.Id, out var windowsTimeZoneId);
-
-			if (!gotWindowsTimeZoneId
-				|| windowsTimeZoneId is null) {
-				return null;
-			}
-
-			var isDaylightSavings = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(instant.ToDateTimeOffset());
-			var abbreviation = TZNames.GetAbbreviationsForTimeZone(dtz.Id, languageCode);
-			var offset = dtz.GetUtcOffset(instant);
-
-			return new TimeZone {
-				Abbreviation = (isDaylightSavings
-					? abbreviation.Daylight
-					: abbreviation.Standard) ?? dtz.Id,
-				IanaId = dtz.Id,
-				IsDaylightSavings = isDaylightSavings,
-				UtcOffset = offset.ToFormattedString(),
-				UtcOffsetTs = offset.ToTimeSpan(),
-				WindowsId = windowsTimeZoneId
-			};
-		}).Where(
-		tz => tz is not null);
-
-	public TimeZone? GetTimeZoneByCoordinate(
-		decimal latitude,
-		decimal longitude) => GetTimeZoneByCoordinate((double)latitude, (double)longitude);
-
-	public TimeZone? GetTimeZoneByCoordinate(
-		double latitude,
-		double longitude) => GetTimeZoneByCoordinate(new Coordinate {
-			Latitude = latitude,
-			Longitude = longitude
-		});
-
-	public TimeZone? GetTimeZoneByCoordinate(
-		ICoordinate coordinate,
-		string languageCode = "en-US") {
-		if (coordinate.Latitude is < -90 or > 90) {
-			throw new ArgumentOutOfRangeException(nameof(coordinate), $"Latitude must be between -90 and 90. Received: {coordinate.Latitude}");
-		}
-
-		if (coordinate.Longitude is < -180 or > 180) {
-			throw new ArgumentOutOfRangeException(nameof(coordinate), $"Longitude must be between -180 and 180. Received: {coordinate.Longitude}");
-		}
-
-		var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
-
-		return GetTimeZoneByIanaId(ianaId.Result, languageCode);
-	}
-
-	public TimeZone? GetTimeZoneByCoordinate(
-		decimal latitude,
-		decimal longitude,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") => GetTimeZoneByCoordinate((double)latitude, (double)longitude, dateTime, languageCode);
+	//  ================================================================================
+	//  By coordinate
+	//  ================================================================================
 
 	public TimeZone? GetTimeZoneByCoordinate(
 		double latitude,
 		double longitude,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") => GetTimeZoneByCoordinate(new Coordinate {
-			Latitude = latitude,
-			Longitude = longitude
-		}, dateTime, languageCode);
+		string? languageCode = null) => GetTimeZoneByCoordinate(latitude, longitude, Now, languageCode);
+
+	public TimeZone? GetTimeZoneByCoordinate(
+		double latitude,
+		double longitude,
+		DateTimeOffset at,
+		string? languageCode = null) => GetTimeZoneByCoordinateCore(latitude, longitude, nameof(latitude), nameof(longitude), at, languageCode);
 
 	public TimeZone? GetTimeZoneByCoordinate(
 		ICoordinate coordinate,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") {
-		if (coordinate.Latitude is < -90 or > 90) {
-			throw new ArgumentOutOfRangeException(nameof(coordinate), $"Latitude must be between -90 and 90. Received: {coordinate.Latitude}");
+		string? languageCode = null) => GetTimeZoneByCoordinate(coordinate, Now, languageCode);
+
+	public TimeZone? GetTimeZoneByCoordinate(
+		ICoordinate coordinate,
+		DateTimeOffset at,
+		string? languageCode = null) {
+		if (coordinate is null) {
+			throw new ArgumentNullException(nameof(coordinate));
 		}
 
-		if (coordinate.Longitude is < -180 or > 180) {
-			throw new ArgumentOutOfRangeException(nameof(coordinate), $"Longitude must be between -180 and 180. Received: {coordinate.Longitude}");
-		}
-
-		var ianaId = TimeZoneLookup.GetTimeZone(coordinate.Latitude, coordinate.Longitude);
-
-		return GetTimeZoneByIanaId(ianaId.Result, dateTime, languageCode);
+		return GetTimeZoneByCoordinateCore(coordinate.Latitude, coordinate.Longitude, nameof(coordinate), nameof(coordinate), at, languageCode);
 	}
+
+	private TimeZone? GetTimeZoneByCoordinateCore(
+		double latitude,
+		double longitude,
+		string latitudeParamName,
+		string longitudeParamName,
+		DateTimeOffset at,
+		string? languageCode) {
+		if (!(latitude is >= -90 and <= 90)) {
+			throw new ArgumentOutOfRangeException(latitudeParamName, latitude, "Latitude must be between -90 and 90.");
+		}
+
+		if (!(longitude is >= -180 and <= 180)) {
+			throw new ArgumentOutOfRangeException(longitudeParamName, longitude, "Longitude must be between -180 and 180.");
+		}
+
+		var catalog = GetCatalog(languageCode);
+		var ianaId = TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
+		var entry = catalog.GetByIanaId(ianaId);
+
+		return entry is null
+			? null
+			: TimeZoneCatalog.Snapshot(entry, at.ToInstant());
+	}
+
+	//  ================================================================================
+	//  By IANA id
+	//  ================================================================================
 
 	public TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
-		string languageCode = "en-US") {
-		var instant = SystemClock.Instance.GetCurrentInstant();
-
-		return GetTimeZoneByIanaId(ianaId, instant, languageCode);
-	}
+		string? languageCode = null) => GetTimeZoneByIanaId(ianaId, Now, languageCode);
 
 	public TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") {
-		if (dateTime is null) {
-			throw new ArgumentNullException(nameof(dateTime));
+		DateTimeOffset at,
+		string? languageCode = null) {
+		if (ianaId is null) {
+			throw new ArgumentNullException(nameof(ianaId));
 		}
 
-		var instant = dateTime.Value.ToInstant();
+		var entry = GetCatalog(languageCode).GetByIanaId(ianaId);
 
-		return GetTimeZoneByIanaId(ianaId, instant, languageCode);
+		return entry is null
+			? null
+			: TimeZoneCatalog.Snapshot(entry, at.ToInstant());
 	}
 
-	private static TimeZone? GetTimeZoneByIanaId(
+	//  ================================================================================
+	//  By Windows id
+	//  ================================================================================
+
+	public TimeZone? GetTimeZoneByWindowsId(
+		string windowsId,
+		string? territory = null,
+		string? languageCode = null) => GetTimeZoneByWindowsId(windowsId, Now, territory, languageCode);
+
+	public TimeZone? GetTimeZoneByWindowsId(
+		string windowsId,
+		DateTimeOffset at,
+		string? territory = null,
+		string? languageCode = null) {
+		if (windowsId is null) {
+			throw new ArgumentNullException(nameof(windowsId));
+		}
+
+		var catalog = GetCatalog(languageCode);
+
+		if (!TZConvert.TryWindowsToIana(windowsId, territory ?? "001", out var ianaId)
+			&& !TZConvert.TryWindowsToIana(windowsId, out ianaId)) {
+			return null;
+		}
+
+		var entry = catalog.GetByIanaId(ianaId);
+
+		return entry is null
+			? null
+			: TimeZoneCatalog.Snapshot(entry, at.ToInstant());
+	}
+
+	public IReadOnlyList<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		string? languageCode = null) => GetTimeZonesByWindowsId(windowsId, Now, languageCode);
+
+	public IReadOnlyList<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		DateTimeOffset at,
+		string? languageCode = null) {
+		if (windowsId is null) {
+			throw new ArgumentNullException(nameof(windowsId));
+		}
+
+		return Snapshot(GetCatalog(languageCode).GetByWindowsId(windowsId), at);
+	}
+
+	//  ================================================================================
+	//  Conversions
+	//  ================================================================================
+
+	public DateTimeOffset? AtTimeZone(
+		DateTime wallClock,
+		string ianaId) => TryAtTimeZone(wallClock, ianaId, out var result, out _)
+		? result
+		: null;
+
+	public DateTimeOffset? AtTimeZone(
+		DateTimeOffset wallClock,
+		string ianaId) => TryAtTimeZone(wallClock.DateTime, ianaId, out var result, out _)
+		? result
+		: null;
+
+	public bool TryAtTimeZone(
+		DateTimeOffset wallClock,
 		string ianaId,
-		Instant instant,
-		string languageCode = "en-US") {
-		var dtz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(ianaId);
+		out DateTimeOffset result,
+		out TimeZoneResolution resolution) => TryAtTimeZone(wallClock.DateTime, ianaId, out result, out resolution);
 
-		if (dtz is null) {
-			return null;
+	public bool TryAtTimeZone(
+		DateTime wallClock,
+		string ianaId,
+		out DateTimeOffset result,
+		out TimeZoneResolution resolution) {
+		if (ianaId is null) {
+			throw new ArgumentNullException(nameof(ianaId));
 		}
 
-		var gotWindowsTimeZoneId = TZConvert.TryIanaToWindows(dtz.Id, out var windowsTimeZoneId);
+		var entry = GetCatalog(null).GetByIanaId(ianaId);
 
-		if (!gotWindowsTimeZoneId
-			|| windowsTimeZoneId is null) {
-			return null;
+		if (entry is null) {
+			result = default;
+			resolution = default;
+
+			return false;
 		}
 
-		var isDaylightSavings = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId).IsDaylightSavingTime(instant.ToDateTimeOffset());
-		var abbreviation = TZNames.GetAbbreviationsForTimeZone(dtz.Id, languageCode);
-		var offset = dtz.GetUtcOffset(instant);
+		var local = LocalDateTime.FromDateTime(DateTime.SpecifyKind(wallClock, DateTimeKind.Unspecified));
+		var mapping = entry.Zone.MapLocal(local);
 
-		return new TimeZone {
-			Abbreviation = (isDaylightSavings
-				? abbreviation.Daylight
-				: abbreviation.Standard) ?? dtz.Id,
-			IanaId = dtz.Id,
-			IsDaylightSavings = isDaylightSavings,
-			UtcOffset = offset.ToFormattedString(),
-			UtcOffsetTs = offset.ToTimeSpan(),
-			WindowsId = windowsTimeZoneId
+		result = _lenientResolver(mapping).ToDateTimeOffset();
+		resolution = mapping.Count switch {
+			0 => TimeZoneResolution.Skipped,
+			1 => TimeZoneResolution.Unambiguous,
+			_ => TimeZoneResolution.Ambiguous
 		};
+
+		return true;
 	}
 
-	public IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-		string windowsId,
-		string languageCode = "en-US") => GetTimeZones(languageCode).Where(
-		tz => tz?.WindowsId == windowsId);
+	public DateTimeOffset? InTimeZone(
+		DateTimeOffset value,
+		string ianaId) {
+		if (ianaId is null) {
+			throw new ArgumentNullException(nameof(ianaId));
+		}
 
-	public IEnumerable<TimeZone> GetTimeZonesByWindowsId(
-		string windowsId,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US") => GetTimeZones(dateTime, languageCode).Where(
-		tz => tz?.WindowsId == windowsId);
+		var entry = GetCatalog(null).GetByIanaId(ianaId);
+
+		return entry is null
+			? null
+			: value.ToInstant().InZone(entry.Zone).ToDateTimeOffset();
+	}
+
+	//  ================================================================================
+	//  Internals
+	//  ================================================================================
+
+	private DateTimeOffset Now => _timeProvider.GetUtcNow();
+
+	private TimeZoneCatalog GetCatalog(
+		string? languageCode) {
+		languageCode ??= _defaultLanguageCode;
+
+		if (_catalogs.TryGetValue(languageCode, out var cached)) {
+			return cached.Value;
+		}
+
+		//	TimeZoneNames throws a bare Exception for an unknown language; validate once, before the
+		//	catalog is built, so the caller gets an argument error and nothing is cached for it.
+		try {
+			_ = TZNames.GetNamesForTimeZone("UTC", languageCode);
+		} catch (Exception e) when (e is not ArgumentException) {
+			throw new ArgumentException($"'{languageCode}' is not a language code TimeZoneNames knows.", nameof(languageCode), e);
+		}
+
+		return _catalogs.GetOrAdd(languageCode, code => new Lazy<TimeZoneCatalog>(() => TimeZoneCatalog.Build(_provider, code))).Value;
+	}
+
+	private static TimeZone[] Snapshot(
+		TimeZoneCatalog.Entry[] entries,
+		DateTimeOffset at) {
+		var instant = at.ToInstant();
+		var timeZones = new TimeZone[entries.Length];
+
+		for (var i = 0; i < entries.Length; i++) {
+			timeZones[i] = TimeZoneCatalog.Snapshot(entries[i], instant);
+		}
+
+		return timeZones;
+	}
 }

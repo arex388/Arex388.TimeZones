@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<Authors>Arex388</Authors>
-		<Description>Arex388.TimeZones is a small .NET Standard 2.0 library for time zone discovery in the past, present or future by a geospatial coordinate, IANA id, or Windows id.</Description>
+		<Description>Offline time zone discovery for .NET Standard 2.0 — by coordinate, IANA id, or Windows id — plus the two conversions consumers actually need: AtTimeZone (keep the wall clock, resolve the zone's offset) and InTimeZone (keep the instant, show it in the zone). Everything is computed from TZDB; nothing is read from the operating system.</Description>
+		<EnablePackageValidation>true</EnablePackageValidation>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -10,7 +11,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/arex388/Arex388.TimeZones</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageTags>arex388 timezone</PackageTags>
+		<PackageReleaseNotes>https://github.com/arex388/Arex388.TimeZones/releases</PackageReleaseNotes>
+		<PackageTags>arex388 timezone time-zone iana windows tzdb coordinates geolocation</PackageTags>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/arex388/Arex388.TimeZones</RepositoryUrl>
@@ -23,15 +25,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GeoTimeZone" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
-		<PackageReference Include="NodaTime" Version="3.2.2" />
-		<PackageReference Include="PolySharp" Version="1.15.0">
+		<PackageReference Include="GeoTimeZone" Version="6.1.0" />
+		<PackageReference Include="Microsoft.Bcl.TimeProvider" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+		<PackageReference Include="NodaTime" Version="3.3.3" />
+		<PackageReference Include="PolySharp" Version="1.16.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="TimeZoneConverter" Version="7.1.0" />
+		<PackageReference Include="TimeZoneConverter" Version="7.2.0" />
 		<PackageReference Include="TimeZoneNames" Version="7.0.0" />
 	</ItemGroup>
 

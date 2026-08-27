@@ -1,17 +1,11 @@
 ﻿namespace Arex388.TimeZones;
 
 /// <summary>
-/// A coordinate.
+/// A geospatial coordinate.
 /// </summary>
-public sealed class Coordinate :
-	ICoordinate {
-	/// <summary>
-	/// The coordinate's latitude.
-	/// </summary>
-	public required double Latitude { get; init; }
-
-	/// <summary>
-	/// The coordinate's longitude.
-	/// </summary>
-	public required double Longitude { get; init; }
-}
+/// <param name="Latitude">The latitude, −90 to 90.</param>
+/// <param name="Longitude">The longitude, −180 to 180.</param>
+public readonly record struct Coordinate(
+	double Latitude,
+	double Longitude) :
+	ICoordinate;

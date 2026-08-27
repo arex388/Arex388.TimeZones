@@ -1,150 +1,284 @@
-﻿using NodaTime;
-
-namespace Arex388.TimeZones;
+﻿namespace Arex388.TimeZones;
 
 /// <summary>
-/// TimeZones service.
+/// Time zone discovery — by coordinate, IANA id, or Windows id — and wall-clock ⇄ zone conversion,
+/// computed entirely from TZDB. Nothing is read from the operating system.
 /// </summary>
+/// <remarks>
+/// Every <c>at</c> parameter is an <em>instant</em>: its offset only identifies the point in time and has
+/// no effect on the result. Every <c>languageCode</c> parameter defaults to
+/// <see cref="TimeZonesOptions.DefaultLanguageCode"/> when <see langword="null"/>. Single lookups return
+/// <see langword="null"/> for an unknown IANA or Windows id and for a zone without a Windows mapping;
+/// argument errors throw.
+/// </remarks>
 public interface ITimeZones {
 	/// <summary>
-	/// Returns all time zones for the current instant in time.
+	/// The TZDB version in use, as reported by the configured NodaTime provider (for example
+	/// <c>TZDB: 2026c (mapping: 48.2)</c>).
 	/// </summary>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	string TzdbVersion { get; }
+
+	//  ================================================================================
+	//  Lists
+	//  ================================================================================
+
+	/// <summary>
+	/// Returns every time zone with a Windows mapping, as of now, ordered by IANA id.
+	/// </summary>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
 	/// <returns>The time zones.</returns>
-	IEnumerable<TimeZone> GetTimeZones(
-		string languageCode = "en-US");
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	IReadOnlyList<TimeZone> GetTimeZones(
+		string? languageCode = null);
 
 	/// <summary>
-	/// Returns all time zones for an instant in time.
+	/// Returns every time zone with a Windows mapping, as of an instant, ordered by IANA id.
 	/// </summary>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
+	/// <param name="at">The instant to compute offsets and daylight-savings state for.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
 	/// <returns>The time zones.</returns>
-	IEnumerable<TimeZone> GetTimeZones(
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	IReadOnlyList<TimeZone> GetTimeZones(
+		DateTimeOffset at,
+		string? languageCode = null);
+
+	//  ================================================================================
+	//  By coordinate
+	//  ================================================================================
 
 	/// <summary>
-	/// Returns all time zones for an instant in time.
+	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to <c>UTC</c>.
 	/// </summary>
-	/// <param name="instant">The instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zones.</returns>
-	IEnumerable<TimeZone> GetTimeZones(
-		Instant instant,
-		string languageCode = "en-US");
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
-	/// </summary>
-	/// <param name="latitude">The coordinate's latitude.</param>
-	/// <param name="longitude">The coordinate's longitude.</param>
-	/// <returns>The time zone.</returns>
-	TimeZone? GetTimeZoneByCoordinate(
-		decimal latitude,
-		decimal longitude);
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
-	/// </summary>
-	/// <param name="latitude">The coordinate's latitude.</param>
-	/// <param name="longitude">The coordinate's longitude.</param>
-	/// <returns>The time zone.</returns>
-	TimeZone? GetTimeZoneByCoordinate(
-		double latitude,
-		double longitude);
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
-	/// </summary>
-	/// <param name="coordinate">The coordinate.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
-	TimeZone? GetTimeZoneByCoordinate(
-		ICoordinate coordinate,
-		string languageCode = "en-US");
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for the current instant in time.
-	/// </summary>
-	/// <param name="latitude">The coordinate's latitude.</param>
-	/// <param name="longitude">The coordinate's longitude.</param>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
-	TimeZone? GetTimeZoneByCoordinate(
-		decimal latitude,
-		decimal longitude,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
-
-	/// <summary>
-	/// Returns the time zone by the specified latitude and longitude coordinate for an instant in time.
-	/// </summary>
-	/// <param name="latitude">The coordinate's latitude.</param>
-	/// <param name="longitude">The coordinate's longitude.</param>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
+	/// <param name="latitude">The latitude, −90 to 90.</param>
+	/// <param name="longitude">The longitude, −180 to 180.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the resolved zone has no Windows mapping.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="latitude"/> or <paramref name="longitude"/> is out of range, NaN, or infinite.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
 	TimeZone? GetTimeZoneByCoordinate(
 		double latitude,
 		double longitude,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
+		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone by the specified point coordinate for an instant in time.
+	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to <c>UTC</c>.
+	/// </summary>
+	/// <param name="latitude">The latitude, −90 to 90.</param>
+	/// <param name="longitude">The longitude, −180 to 180.</param>
+	/// <param name="at">The instant to compute the offset and daylight-savings state for.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the resolved zone has no Windows mapping.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="latitude"/> or <paramref name="longitude"/> is out of range, NaN, or infinite.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	TimeZone? GetTimeZoneByCoordinate(
+		double latitude,
+		double longitude,
+		DateTimeOffset at,
+		string? languageCode = null);
+
+	/// <summary>
+	/// Returns the time zone at a coordinate, as of now. Open ocean resolves to <c>UTC</c>.
 	/// </summary>
 	/// <param name="coordinate">The coordinate.</param>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the resolved zone has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="coordinate"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The coordinate's latitude or longitude is out of range, NaN, or infinite.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
 	TimeZone? GetTimeZoneByCoordinate(
 		ICoordinate coordinate,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
+		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone by the IANA id for the current instant in time.
+	/// Returns the time zone at a coordinate, as of an instant. Open ocean resolves to <c>UTC</c>.
 	/// </summary>
-	/// <param name="ianaId">The time zone's IANA id.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
+	/// <param name="coordinate">The coordinate.</param>
+	/// <param name="at">The instant to compute the offset and daylight-savings state for.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the resolved zone has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="coordinate"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The coordinate's latitude or longitude is out of range, NaN, or infinite.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	TimeZone? GetTimeZoneByCoordinate(
+		ICoordinate coordinate,
+		DateTimeOffset at,
+		string? languageCode = null);
+
+	//  ================================================================================
+	//  By IANA id
+	//  ================================================================================
+
+	/// <summary>
+	/// Returns the time zone for an IANA id (matched case-insensitively; aliases such as <c>US/Eastern</c> are accepted), as of now.
+	/// </summary>
+	/// <param name="ianaId">The IANA id.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
 	TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
-		string languageCode = "en-US");
+		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zone by the IANA id for an instant in time.
+	/// Returns the time zone for an IANA id (matched case-insensitively; aliases such as <c>US/Eastern</c> are accepted), as of an instant.
 	/// </summary>
-	/// <param name="ianaId">The time zone's IANA id.</param>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zone.</returns>
+	/// <param name="ianaId">The IANA id.</param>
+	/// <param name="at">The instant to compute the offset and daylight-savings state for.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
 	TimeZone? GetTimeZoneByIanaId(
 		string ianaId,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
+		DateTimeOffset at,
+		string? languageCode = null);
+
+	//  ================================================================================
+	//  By Windows id
+	//  ================================================================================
 
 	/// <summary>
-	/// Returns the time zones by the Windows id for the current instant in time.
+	/// Returns the canonical IANA time zone for a Windows id (matched case-insensitively), optionally for a territory, as of now.
 	/// </summary>
-	/// <param name="windowsId">The time zones' Windows id.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zones.</returns>
-	IEnumerable<TimeZone> GetTimeZonesByWindowsId(
+	/// <param name="windowsId">The Windows id, for example <c>Eastern Standard Time</c>.</param>
+	/// <param name="territory">An ISO 3166 territory code, for example <c>CA</c> to get <c>America/Toronto</c>; the default territory is used when <see langword="null"/> or unmapped.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the Windows id is unknown.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="windowsId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	TimeZone? GetTimeZoneByWindowsId(
 		string windowsId,
-		string languageCode = "en-US");
+		string? territory = null,
+		string? languageCode = null);
 
 	/// <summary>
-	/// Returns the time zones by the Windows id for the current instant in time.
+	/// Returns the canonical IANA time zone for a Windows id (matched case-insensitively), optionally for a territory, as of an instant.
 	/// </summary>
-	/// <param name="windowsId">The time zones' Windows id.</param>
-	/// <param name="dateTime">The DateTimeOffset value to use for an instant in time.</param>
-	/// <param name="languageCode">The language code to use. "en-US" by default.</param>
-	/// <returns>The time zones.</returns>
-	IEnumerable<TimeZone> GetTimeZonesByWindowsId(
+	/// <param name="windowsId">The Windows id, for example <c>Eastern Standard Time</c>.</param>
+	/// <param name="at">The instant to compute the offset and daylight-savings state for.</param>
+	/// <param name="territory">An ISO 3166 territory code, for example <c>CA</c> to get <c>America/Toronto</c>; the default territory is used when <see langword="null"/> or unmapped.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zone, or <see langword="null"/> if the Windows id is unknown.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="windowsId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	TimeZone? GetTimeZoneByWindowsId(
 		string windowsId,
-		DateTimeOffset? dateTime,
-		string languageCode = "en-US");
+		DateTimeOffset at,
+		string? territory = null,
+		string? languageCode = null);
+
+	/// <summary>
+	/// Returns every IANA time zone that maps to a Windows id (matched case-insensitively), as of now, ordered by IANA id.
+	/// </summary>
+	/// <param name="windowsId">The Windows id, for example <c>Eastern Standard Time</c>.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zones; empty if the Windows id is unknown.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="windowsId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	IReadOnlyList<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		string? languageCode = null);
+
+	/// <summary>
+	/// Returns every IANA time zone that maps to a Windows id (matched case-insensitively), as of an instant, ordered by IANA id.
+	/// </summary>
+	/// <param name="windowsId">The Windows id, for example <c>Eastern Standard Time</c>.</param>
+	/// <param name="at">The instant to compute offsets and daylight-savings state for.</param>
+	/// <param name="languageCode">The language for <see cref="TimeZone.Name"/> and <see cref="TimeZone.Abbreviation"/>.</param>
+	/// <returns>The time zones; empty if the Windows id is unknown.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="windowsId"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="languageCode"/> is not a language TimeZoneNames knows.</exception>
+	IReadOnlyList<TimeZone> GetTimeZonesByWindowsId(
+		string windowsId,
+		DateTimeOffset at,
+		string? languageCode = null);
+
+	//  ================================================================================
+	//  Conversions
+	//  ================================================================================
+
+	/// <summary>
+	/// Keeps the wall clock and resolves its offset in a zone. The input's <see cref="DateTime.Kind"/> is ignored.
+	/// </summary>
+	/// <remarks>
+	/// Use this when the date and time are what the user meant and only the zone is missing — a shift that starts
+	/// at 09:00 in <c>America/New_York</c> is <c>09:00 −05:00</c> in January and <c>09:00 −04:00</c> in July.
+	/// A wall clock that does not exist (the spring-forward gap) is shifted forward by the gap; one that occurs
+	/// twice (the fall-back hour) resolves to its earlier occurrence. Use
+	/// <see cref="TryAtTimeZone(DateTime, string, out DateTimeOffset, out TimeZoneResolution)"/> to learn which happened.
+	/// To convert an instant instead, use <see cref="InTimeZone"/>.
+	/// </remarks>
+	/// <param name="wallClock">The date and time as read from a clock in the zone.</param>
+	/// <param name="ianaId">The IANA id of the zone.</param>
+	/// <returns>The wall clock with the zone's offset, or <see langword="null"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	DateTimeOffset? AtTimeZone(
+		DateTime wallClock,
+		string ianaId);
+
+	/// <summary>
+	/// Keeps the wall clock and resolves its offset in a zone. The input's offset is ignored.
+	/// </summary>
+	/// <remarks>
+	/// Use this when the date and time are what the user meant and only the zone is missing — a shift that starts
+	/// at 09:00 in <c>America/New_York</c> is <c>09:00 −05:00</c> in January and <c>09:00 −04:00</c> in July,
+	/// whatever offset the input carried. A wall clock that does not exist (the spring-forward gap) is shifted
+	/// forward by the gap; one that occurs twice (the fall-back hour) resolves to its earlier occurrence. Use
+	/// <see cref="TryAtTimeZone(DateTimeOffset, string, out DateTimeOffset, out TimeZoneResolution)"/> to learn
+	/// which happened. To convert an instant instead, use <see cref="InTimeZone"/>.
+	/// </remarks>
+	/// <param name="wallClock">The date and time as read from a clock in the zone; its offset is discarded.</param>
+	/// <param name="ianaId">The IANA id of the zone.</param>
+	/// <returns>The wall clock with the zone's offset, or <see langword="null"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	DateTimeOffset? AtTimeZone(
+		DateTimeOffset wallClock,
+		string ianaId);
+
+	/// <summary>
+	/// Keeps the wall clock and resolves its offset in a zone, reporting how the resolution went.
+	/// </summary>
+	/// <param name="wallClock">The date and time as read from a clock in the zone; its <see cref="DateTime.Kind"/> is ignored.</param>
+	/// <param name="ianaId">The IANA id of the zone.</param>
+	/// <param name="result">The wall clock with the zone's offset; <see langword="default"/> when the method returns <see langword="false"/>.</param>
+	/// <param name="resolution">Whether the wall clock was unambiguous, occurred twice (earlier occurrence returned), or did not exist (shifted forward by the gap).</param>
+	/// <returns><see langword="true"/> if the zone was found; <see langword="false"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	bool TryAtTimeZone(
+		DateTime wallClock,
+		string ianaId,
+		out DateTimeOffset result,
+		out TimeZoneResolution resolution);
+
+	/// <summary>
+	/// Keeps the wall clock and resolves its offset in a zone, reporting how the resolution went.
+	/// </summary>
+	/// <param name="wallClock">The date and time as read from a clock in the zone; its offset is discarded.</param>
+	/// <param name="ianaId">The IANA id of the zone.</param>
+	/// <param name="result">The wall clock with the zone's offset; <see langword="default"/> when the method returns <see langword="false"/>.</param>
+	/// <param name="resolution">Whether the wall clock was unambiguous, occurred twice (earlier occurrence returned), or did not exist (shifted forward by the gap).</param>
+	/// <returns><see langword="true"/> if the zone was found; <see langword="false"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	bool TryAtTimeZone(
+		DateTimeOffset wallClock,
+		string ianaId,
+		out DateTimeOffset result,
+		out TimeZoneResolution resolution);
+
+	/// <summary>
+	/// Keeps the instant and changes the wall clock to the zone's.
+	/// </summary>
+	/// <remarks>
+	/// Use this when the value already identifies a point in time and you want to show it somewhere else —
+	/// <c>2026-07-15T12:00:00Z</c> in <c>Asia/Kolkata</c> is <c>17:30 +05:30</c>, the same instant. To keep the
+	/// wall clock and change the zone instead, use <see cref="AtTimeZone(DateTimeOffset, string)"/>.
+	/// </remarks>
+	/// <param name="value">The instant.</param>
+	/// <param name="ianaId">The IANA id of the zone.</param>
+	/// <returns>The same instant with the zone's wall clock and offset, or <see langword="null"/> if the id is unknown or has no Windows mapping.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="ianaId"/> is <see langword="null"/>.</exception>
+	DateTimeOffset? InTimeZone(
+		DateTimeOffset value,
+		string ianaId);
 }
