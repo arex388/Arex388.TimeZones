@@ -7,6 +7,7 @@
 .claude/
 .mcp.json
 CLAUDE*.md
+AGENTS.md
 
 # User-specific files
 *.rsuser
