@@ -49,10 +49,6 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
-# Coverage.ps1 output
-Arex388.TimeZones.Tests/reports/
-Coverage.lnk
-
 # NUnit
 *.VisualState.xml
 TestResult.xml
